@@ -1,0 +1,452 @@
+# Clases para alumno
+
+import os
+from tabulate import tabulate as tabla
+import TOOLS.busqueda as bq
+
+#*-------------------------------------------------------------------------------------------*
+#*------ Funciones especiales----------------------------------------------------------------*
+#*-------------------------------------------------------------------------------------------*
+
+def extraer(ruta):
+	# Funcion que recolecta a los alumnos dentro de la carpeta Cursos
+	# y devuelve una lista con las tuplas de los datos de cada alumno
+
+	Planteles = os.listdir(ruta)
+
+	lista = []
+
+	for Plantel in Planteles:
+		ruta1 = ruta + "/" + Plantel
+		Cursos = os.listdir(ruta1)
+
+		for Curso in Cursos:
+			ruta2 = ruta1 + "/" + Curso
+			Horarios = os.listdir(ruta2)
+
+			for Horario in Horarios:
+				ruta3 = ruta2 + "/" + Horario
+				horario = Horario.replace(".txt", "")
+
+				Alumnos = open(ruta3,"r")
+
+				for Alumno in Alumnos:
+					Alumno = Alumno.strip()
+					#print(Alumno)
+					nombre,numRegistro,carrera,CU = Alumno.split("&")
+					nombre,numRegistro,carrera,CU = nombre.strip(), \
+					numRegistro.strip(),carrera.strip(),CU.strip()
+
+					lista.append((nombre,numRegistro,carrera,CU,Curso,Plantel,horario))
+
+				Alumnos.close()
+
+	return lista
+
+#--------------------------------------------------------------------------------------------
+
+def quitaracentos(cadena):
+	cadena = cadena.strip().lower()
+	acentos = [("á","a"),("é","e"),("í","i"),("ó","o"),("ú","u")]
+
+	for i in acentos:
+		cadena = cadena.replace(*i)
+
+	return cadena
+
+#--------------------------------------------------------------------------------------------
+
+def QuitarMEspacios(cadena):
+	aux = cadena.strip().split(" ")
+	aux2 = []
+
+	for i in aux:
+		i = i.strip()
+
+		if i == "":
+			continue
+
+		aux2.append(i)
+
+	return " ".join(aux2)
+
+#--------------------------------------------------------------------------------------------
+
+def procesar(cadena):
+	aux = quitaracentos(cadena)
+
+	return QuitarMEspacios(aux)
+
+
+#*-------------------------------------------------------------------------------------------*
+#*------ Clases -----------------------------------------------------------------------------*
+#*-------------------------------------------------------------------------------------------*
+
+
+class TodosMisAlumnos:
+
+	def __init__(self,lista_,ruta_pdf,ruta_base_datos):
+		self.lista = lista_
+		self.ruta_pdf = ruta_pdf
+		self.ruta_base_datos = ruta_base_datos
+
+		self.EntregarPDF()
+
+	#--------------------------------------------------------------------------------------------
+
+	def organizarPDF(self, Consola = True ):
+
+		PDFs = os.listdir(self.ruta_pdf)
+
+		for PDF in PDFs:
+			ruta1 = self.ruta_pdf + "/" + PDF
+
+			try:
+				os.listdir(ruta1)
+				continue
+			except NotADirectoryError:
+				pass
+
+			nombre = quitaracentos(PDF.replace(".pdf",""))
+
+			for alumno in self.lista:
+				nombre2 = alumno.comparar_nombre
+
+				if nombre != nombre2:
+					continue
+
+				nueva_ruta = alumno.plantel + "_" + alumno.curso + "_" + alumno.horario
+
+				if Consola:
+					print("\nArchivos desplazados:")
+					print(PDF + " --> " + nueva_ruta + "/\n")
+
+				try:
+					os.rename(ruta1, self.ruta_pdf + "/" + nueva_ruta + "/" + PDF)
+				except FileNotFoundError:
+					os.mkdir(self.ruta_pdf + "/" + nueva_ruta)
+					os.rename(ruta1, self.ruta_pdf + "/" + nueva_ruta + "/" + PDF)
+				except:
+					print("No sé que pasa")
+
+
+		self.EntregarPDF()
+
+	#--------------------------------------------------------------------------------------------
+
+	def GenerarListas(self):
+		#print("Has invocado al héroe japonés")
+
+		Salones = dict()
+
+		for alumno in self.lista:
+			Salon_actual = "\n\n* Lista del plantel " + alumno.plantel + ", curso " + \
+			alumno.curso + " del horario " + alumno.horario + " *\n\n"
+
+			if Salon_actual not in Salones:
+				Salones[Salon_actual] = []
+
+			datos_alumno = [alumno.nombre,alumno.nRegistro,alumno.carrera,alumno.CU,alumno.NR_entregado]
+
+			Salones[Salon_actual].append(datos_alumno)
+
+		titulos = ["Nombre","Num. de registro", "Carrera", "Centro", "PDF enviado"]
+
+		salida = open("Listas completas.txt", "w")
+
+		for salon in Salones:
+			print(salon, file=salida)
+
+			print(tabla(Salones[salon], headers=titulos), file=salida)
+
+
+		print("\n", file=salida)
+
+		salida.close()
+	#--------------------------------------------------------------------------------------------
+
+	def EntregarPDF(self):
+
+		cursos = os.listdir(self.ruta_pdf)
+
+		entregado = dict()
+
+		for curso in cursos:
+
+			try:
+				PDFs = os.listdir(self.ruta_pdf + "/" + curso)
+			except NotADirectoryError:
+				continue
+
+			#datos_curso = curso.split("_")
+
+			for PDF in PDFs:
+
+				rutaPDF = self.ruta_pdf + "/" + curso + "/" + PDF
+				PDF = quitaracentos(PDF)
+
+				if "pdf" not in PDF.split("."):
+					continue
+
+				entregado[PDF.replace(".pdf","")] = rutaPDF
+
+
+		for alumno in self.lista:
+			nombre = alumno.comparar_nombre
+
+			if nombre in entregado:
+				alumno.NR_entregado = "Sí"
+				alumno.RutaPDF = entregado[nombre]
+			else:
+				alumno.NR_entregado = "*No*"
+
+	#--------------------------------------------------------------------------------------------
+
+	def ReescribirBaseDatos(self, Consola = True):
+
+		Salones = dict()
+
+		for alumno in self.lista:
+			Salon_actual = self.ruta_base_datos + "/" + \
+			alumno.plantel + "/" + alumno.curso + "/" + alumno.horario + ".txt"
+
+			if Salon_actual not in Salones:
+				Salones[Salon_actual] = dict()
+
+			datos_alumno = (alumno.nombre,alumno.nRegistro,alumno.carrera,alumno.CU)
+			Salones[Salon_actual][alumno.comparar_nombre] = datos_alumno
+
+		for salon in Salones:
+			nombres_ordenados = sorted(Salones[salon])
+
+			salida = open(salon,"w")
+
+			for nombre in nombres_ordenados:
+				print("\t&\t".join(Salones[salon][nombre]), file=salida )
+
+			salida.close()
+
+		if Consola:
+			print("\n\t*** La base de datos de alumnos, ha sido actualizada ***")
+
+	#--------------------------------------------------------------------------------------------
+
+	def EditarDatosAlumnos(self):
+		print("\n\tBienvenidos al menú de edición\n")
+		print('''
+	En este menú solo puedes editar tres datos de los alumnos: Num.registro, carrera o
+	Centro Universitario: para editar cada una ingresa, respectivamente, nr, c o cu al inicio
+	de la linea de comando. Seguido del término de búsqueda (nombre o apellido) para el
+	alumno, y luego el nuevo dato. Todo separado por comas. Ejemplo:
+
+		c, Lopez Urquidi, Turismo
+
+	Esto cambiará la carrera de un alumno con apellido Lopez Urquidi a Turismo. Si hay más
+	coíncidencias se desplegará un menú para elegir. Nota: Los acentos y mayúsculas no infieren
+	en la búsqueda del nombre del alumno, por lo demás tiene que haber una coincidencia
+	perfecta.
+
+	Para salir, escribe exit. Si fuerzas el cierre, los cambios no se guardarán. Para guardar
+	sin salir, escribe actualizar.
+
+		''')
+
+		self.operadores = ["nr","c","cu"]
+		self.consolaEditar()
+		self.GenerarListas()
+
+	#--------------------------------------------------------------------------------------------
+
+	def consolaEditar(self):
+
+		opcion = [""]
+
+		while opcion[0] != "exit":
+			opcion = input("\t>>> ").split(",")
+
+			try:
+				opcion[0],opcion[1],opcion[2] = procesar(opcion[0]),procesar(opcion[1]),QuitarMEspacios(opcion[2])
+			except IndexError:
+				procesar(opcion[0])
+
+			try:
+				if opcion[2].strip() == "*":
+					opcion[2] = QuitarMEspacios(input("\t\tIngresa el nuevo dato>>> "))
+			except IndexError:
+				pass
+
+			if opcion[0] == "exit":
+				self.ReescribirBaseDatos()
+			elif opcion[0] == "actualizar":
+				self.ReescribirBaseDatos()
+				print()
+			elif len(opcion) < 3:
+				print("\tERROR. Falta entradas, o no se está usando coma para separar.")
+			elif len(opcion) > 3:
+				print("\tERROR. Se ingresó más de una entrada.")
+			elif opcion[0].strip() not in self.operadores:
+				print("\tERROR. No se encontró el dato a editar. Ingresa nr, c o cu al inicio de la linea.")
+			else:
+				self.MotorEditar(opcion)
+
+		print()
+	#--------------------------------------------------------------------------------------------
+
+	def MotorEditar(self, opcion):
+		if opcion[0].strip() == "nr":
+			dato = "Número de registro"
+		elif opcion[0].strip() == "c":
+			dato = "Carrera"
+		elif opcion[0].strip() == "cu":
+			dato = "Centro Universitario"
+
+		indice = bq.buscar(opcion[1],self.lista)
+
+		if indice != "Abortar":
+			self.lista[indice].CambiarDato(dato, opcion[2].strip())
+
+	#--------------------------------------------------------------------------------------------
+
+	def BuscarAlumno(self):
+
+		print("\n\tAquí puedes buscar a un alumno por nombre o apellido.")
+		print("\tSe desplegaran los datos completos en pantalla. Para terminar escribe exit.\n")
+
+		opcion = ""
+
+		while opcion != "exit":
+			opcion = input("\tBuscar>> ")
+
+			if opcion == "Edicion":
+				self.EditarDatosAlumnos()
+				continue
+
+			indice = bq.buscar(procesar(opcion),self.lista)
+
+			if indice == "Abortar":
+				continue
+
+			print("\n\t**Datos Generales**")
+			print("\tNombre: " + self.lista[indice].nombre)
+			print("\tNúmero de registro: " + self.lista[indice].nRegistro)
+			print("\tCarrera: " + self.lista[indice].carrera)
+			print("\tCentro Universitario: " + self.lista[indice].CU)
+			print("\t**Datos Lumiere**")
+			print("\tPlantel: " + self.lista[indice].plantel + ", Curso: " + self.lista[indice].curso, end="")
+			print(", Horario: " + self.lista[indice].horario)
+			print("\t¿PDF enviado?: " + self.lista[indice].NR_entregado)
+			print()
+
+			self.AbrirPDF(indice)
+
+	def Buscar_(self,cadena):
+		indice = bq.buscar_GUI(procesar(cadena),self.lista)
+#		if indice == "Abortar":
+#			continue
+		return indice
+
+	#--------------------------------------------------------------------------------------------
+
+	def AbrirPDFmenu(self):
+		print("\n\tAquí puedes hacer uns búsqueda para abrir el PDF correspondiente al")
+		print("\tnúméro de registro del alumno si es que este ya lo entregó. Busca por")
+		print("\tnombre o apellido. Para salir escribe exit.\n")
+
+		opcion = ""
+
+		while opcion != "exit":
+			opcion = input("\tBuscar>> ")
+
+			indice = bq.buscar(procesar(opcion),self.lista)
+
+			if indice == "Abortar":
+				continue
+			elif self.lista[indice].RutaPDF == "Sin ruta":
+				print("\n\tEste alumno no ha entregado su PDF\n")
+				continue
+
+			print("\n\t** Abriendo archivo **\n")
+
+			Ruta = "\"" + self.lista[indice].RutaPDF + "\""
+
+			os.system("okular " + Ruta + " >/dev/null 2>&1 &")
+
+			#print(Ruta)
+
+	#--------------------------------------------------------------------------------------------
+
+	def AbrirPDF(self,indice):
+
+		ruta = self.lista[indice].RutaPDF
+
+		if ruta == "Sin ruta":
+			print()
+			return
+		loop = ""
+
+		while loop == "":
+			opcion = input("\t¿Desea abrir el PDF con el número de registro?(S/N)>>> ").strip().lower()
+
+			if opcion not in ["s","n"]:
+				print("\tOpción inválida")
+				continue
+			else:
+				loop = "s"
+
+			if opcion == "s":
+				print("\n\t\t** Abriendo archivo **\n")
+				Ruta = "\"" + ruta + "\""
+				os.system("okular " + Ruta + " >/dev/null 2>&1 &")
+
+
+	def AbrirPDF_GUI(self,indice):
+		ruta = self.lista[indice].RutaPDF
+
+		if ruta == "Sin ruta":
+			return
+		Ruta = "\"" + ruta + "\""
+		os.system("okular " + Ruta + " >/dev/null 2>&1 &")
+#--------------------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------------------
+
+
+class Alumno:
+
+	def __init__(self, nombre, numRegistro, carrera, CU, curso, plantel, horario):
+		# nombre: Nombre del alumno
+		# numRegristro: Proporcionado al hacer tramites UDG
+		# carrera: Carrera a aspirar
+		# CU: Centro universitario de la red
+		# Curso: Nombre del curso en Lumiere
+		# plantel: Plantel de Lumiere donde asiste el alumno
+		# horario: Horario en el que el alumno asiste
+
+		self.nombre = QuitarMEspacios(nombre)
+		self.nRegistro = numRegistro
+		self.carrera = QuitarMEspacios(carrera)
+		self.CU = CU
+		self.curso = curso
+		self.plantel = plantel
+		self.horario = horario
+		self.NR_entregado = "No data"
+		self.comparar_nombre = quitaracentos(self.nombre)
+		self.RutaPDF = "Sin ruta"
+
+	#--------------------------------------------------------------------------------------------
+
+	def CambiarDato(self,dato,nuevo):
+
+		if dato == "Número de registro":
+			self.nRegistro = nuevo
+		elif dato == "Carrera":
+			self.carrera = nuevo
+		elif dato == "Centro Universitario":
+			self.CU = nuevo
+
+	#--------------------------------------------------------------------------------------------
+
+	def DiccAlumno(self):
+		self.datos = ({ "Nombre" : self.nombre, "Número de registro" : self.nRegistro,
+						"Carrera" : self.carrera, "Centro Universitario" : self.CU,
+						"Curso" : self.curso, "Plantel" : self.plantel, "Horario" : self.horario,
+						"¿PDF entregado?" : self.NR_entregado})

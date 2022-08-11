@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>759</width>
+    <height>518</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Gestor de cursos</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QGridLayout" name="gridLayout">
+    <item row="0" column="0">
+     <widget class="QTabWidget" name="tabWidget">
+      <property name="currentIndex">
+       <number>0</number>
+      </property>
+      <widget class="QWidget" name="TabBuscar">
+       <attribute name="title">
+        <string comment="En serio" extracomment="Busca por nombre al alumno y mira su información">Buscar</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout">
+        <item>
+         <widget class="QWidget" name="widget" native="true">
+          <property name="maximumSize">
+           <size>
+            <width>16777215</width>
+            <height>50</height>
+           </size>
+          </property>
+          <layout class="QHBoxLayout" name="horizontalLayout">
+           <item>
+            <widget class="QLineEdit" name="CuadroBuscar"/>
+           </item>
+           <item>
+            <widget class="QPushButton" name="BotonBuscar">
+             <property name="text">
+              <string>Buscar</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="BotonAgregar">
+             <property name="text">
+              <string>Agregar nuevo</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="Mensajes2Usuario">
+          <property name="text">
+           <string>Mensajes al usuario</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QFrame" name="frame_2">
+          <property name="frameShape">
+           <enum>QFrame::StyledPanel</enum>
+          </property>
+          <property name="frameShadow">
+           <enum>QFrame::Raised</enum>
+          </property>
+          <layout class="QHBoxLayout" name="horizontalLayout_2">
+           <item>
+            <widget class="QListWidget" name="Mostrar"/>
+           </item>
+           <item>
+            <widget class="QWidget" name="widget_2" native="true">
+             <layout class="QGridLayout" name="gridLayout_2">
+              <item row="5" column="0">
+               <spacer name="verticalSpacer">
+                <property name="orientation">
+                 <enum>Qt::Vertical</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>20</width>
+                  <height>40</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+              <item row="4" column="0">
+               <widget class="QPushButton" name="AbrirPDF">
+                <property name="text">
+                 <string>Abrir PDF</string>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="0">
+               <widget class="QPushButton" name="BotonEditar">
+                <property name="text">
+                 <string>Editar</string>
+                </property>
+               </widget>
+              </item>
+              <item row="3" column="0">
+               <spacer name="verticalSpacer_2">
+                <property name="orientation">
+                 <enum>Qt::Vertical</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>20</width>
+                  <height>30</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+             </layout>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="TabConsola">
+       <attribute name="title">
+        <string comment="Desambiugacion" extracomment="Usa la consola para editar los datos de los alumnos">Consola</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_2">
+        <item>
+         <widget class="QLineEdit" name="Consola"/>
+        </item>
+        <item>
+         <widget class="QLabel" name="MensajesConsola">
+          <property name="text">
+           <string/>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menuBar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>759</width>
+     <height>22</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuasdasd">
+    <property name="title">
+     <string>Archivos</string>
+    </property>
+    <widget class="QMenu" name="menuJSON">
+     <property name="title">
+      <string>JSON</string>
+     </property>
+     <addaction name="actionImportar_JSON"/>
+     <addaction name="actionExportar_JSON"/>
+    </widget>
+    <addaction name="actionImportar"/>
+    <addaction name="actionExportar"/>
+    <addaction name="actionGenerar_lista"/>
+    <addaction name="actionOrganizar_PDFs"/>
+    <addaction name="menuJSON"/>
+   </widget>
+   <widget class="QMenu" name="menuCursos">
+    <property name="title">
+     <string>Cursos</string>
+    </property>
+   </widget>
+   <addaction name="menuasdasd"/>
+   <addaction name="menuCursos"/>
+  </widget>
+  <action name="actionImportar">
+   <property name="text">
+    <string>Importar</string>
+   </property>
+  </action>
+  <action name="actionExportar">
+   <property name="text">
+    <string>Exportar</string>
+   </property>
+  </action>
+  <action name="actionGenerar_lista">
+   <property name="text">
+    <string>Generar lista</string>
+   </property>
+  </action>
+  <action name="actionOrganizar_PDFs">
+   <property name="text">
+    <string>Organizar PDFs</string>
+   </property>
+  </action>
+  <action name="actionImportar_JSON">
+   <property name="text">
+    <string>Importar JSON</string>
+   </property>
+  </action>
+  <action name="actionExportar_JSON">
+   <property name="text">
+    <string>Exportar JSON</string>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
