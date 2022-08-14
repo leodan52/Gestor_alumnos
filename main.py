@@ -31,12 +31,14 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 		self.setupUi(self)
 		self.tabWidget.setCurrentIndex(0)
 
-		self.Ruta_Base = "Cursos"
-		self.Ruta_PDF = "Cursos_pdf"
+		rutas = extraer_historial(".rutas.json")
+		self.Ruta_Base = rutas["Base_datos"]
+		self.Ruta_PDF = rutas["Base_PDF"]
+		self.Ruta_Historial = ".historial.json"
 
 		self.Listas = self.Extraer_()
 
-		self.MensajeUser("Bienvenido. El fichero ./Cursos ha sido cargado")
+		self.MensajeUser(f'Bienvenido. El fichero {self.Ruta_Base}/ ha sido cargado')
 
 		self.actionImportar.triggered.connect(self.Importar_)
 		self.actionExportar.triggered.connect(self.Exportar_)
@@ -54,8 +56,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
 	def Extraer_(self):
 
-		''' Extraemos los alumnos del directorio ./Cursos. Estos se reparten en de archivos TXT mediante
-			el siguiente árbol: ./Cursos/PLANTEL/NOMBRE_CURSO/HORARIO.txt '''
+		''' Extraemos los alumnos del directorio elegido. Estos se reparten en de archivos TXT mediante
+			el siguiente árbol: ./base_de_datos/PLANTEL/NOMBRE_CURSO/HORARIO.txt '''
 
 		alumnos = extraer(self.Ruta_Base)
 
@@ -74,17 +76,31 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 	#--------Exportar a archivo JSON ----------------------------------------------------------------
 
 	def ExportarJSON(self):
+		ruta = extraer_historial(self.Ruta_Historial)["Salida_JSON"]
+
 		archivo = QFileDialog.getSaveFileName(self, "Guardar archivo",
-											"sin_titulo.json",
+											f'{ruta}/sin_titulo.json',
 											"Archivo JSON (*.json)" )[0]
+
+		ruta = os.path.dirname(archivo)
+		r_historial("Salida_JSON",ruta,self.Ruta_Historial)
+
 		self.Listas.Todos2JSON(archivo)
-		self.MensajeUser("Datos de alumnos exportados a alumnos.json")
+		self.MensajeUser(f'Datos de alumnos exportados a {archivo}')
 
 	#------- Import JSON----------------------------------------------------------------------------
+
 	def ImportarJSON(self):
-		archivo = QFileDialog.getOpenFileName(self,"Elige el archivo", ".", "Archivo JSON (*.json)")[0]
+		ruta = extraer_historial(self.Ruta_Historial)["Entrada_JSON"]
+		archivo = QFileDialog.getOpenFileName(self,"Elige el archivo", ruta, "Archivo JSON (*.json)")[0]
+
+		if archivo.strip() == "":
+			return
+
+		r_historial("Entrada_JSON",archivo,self.Ruta_Historial)
+
 		self.Listas.ImportJSON(archivo)
-		self.MensajeUser("Archivo alumnos.json cargado. Recuerde actualizar la base de datos")
+		self.MensajeUser(f'Archivo {archivo} cargado. Recuerde actualizar la base de datos')
 
 	#--------Generar Listas Completas.txt -----------------------------------------------------
 
@@ -92,31 +108,39 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 		# Por alguna razon que desconozco, usar el método directo de TodosMisAlumnos GenerarListas()
 		# en el Qaction generaba un problema: Al Importar_(), ya no funcionaba nuevamente
 
+		ruta = extraer_historial(self.Ruta_Historial)["Salida_listas"]
+
 		archivo = QFileDialog.getSaveFileName(self, "Generar archivo",
-											"Listas_completas.txt",
+											"{ruta}/Listas_sin_nombre.txt",
 											"Archivo TXT (*.txt)" )[0]
 
+		if archivo.strip() == "":
+			return
+
+		ruta = os.path.dirname(archivo)
+		r_historial("Salida_listas",ruta,self.Ruta_Historial)
+
 		self.Listas.GenerarListas(archivo)
-		self.MensajeUser("Las listas completas han sido generadas. Revisa el .txt")
+		self.MensajeUser(f'Las listas completas han sido generadas en {archivo}')
 
 	#------- Organizar PDF -------------------------------------------------------------------------
 
 	def Org_PDFs_(self):
 		self.Listas.organizarPDF(False)
 
-		self.MensajeUser("Los archivos PDF han sido organizados en ./Cursos_PDF")
+		self.MensajeUser(f'Los archivos PDF han sido organizados en {self.Ruta_PDF}/')
 
 	# ------ Refrescar desde base de datos --------------------------------------------------------
 
 	def Importar_(self):
 		self.Listas = self.Extraer_()
-		self.MensajeUser("La base de datos ./Cursos ha sido cargada")
+		self.MensajeUser(f'La base de datos {self.Ruta_Base}/ ha sido cargada')
 
 	# ------ Reescribir base de datos ----------------------------------------------------------------
 
 	def Exportar_(self):
 		self.Listas.ReescribirBaseDatos(False)
-		self.MensajeUser("La base de datos ./Cursos ha sido actualizada")
+		self.MensajeUser(f'La base de datos {self.Ruta_Base}/ ha sido actualizada')
 
 	# ------- Filtro de señales de teclado -----------------------------------------------------------
 
