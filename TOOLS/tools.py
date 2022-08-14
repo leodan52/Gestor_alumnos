@@ -2,6 +2,12 @@
 
 import os, sys, subprocess
 from webbrowser import open_new
+import json
+
+def main():
+
+	historial("../.rutas.json")
+
 
 #*-------------------------------------------------------------------------------------------*
 #*------ Funciones especiales----------------------------------------------------------------*
@@ -97,3 +103,28 @@ def Abrete(ruta):
 		subprocess.call(('open', ruta))
 	else:
 		open_new(ruta)
+
+#--------------------------------------------------------------------------------------------
+
+def extraer_historial(ruta_historial):
+	entrada = open(ruta_historial, "r")
+	dcc = "".join(entrada.readlines())
+
+	return json.loads(dcc)
+
+#--------------------------------------------------------------------------------------------
+
+def r_historial(dic, nuevo, ruta):
+	aux = extraer_historial(ruta)
+
+	aux[dic] = nuevo
+	aux = json.dumps(aux)
+	salida = open(ruta, "w")
+
+	print(aux, file=salida)
+
+	salida.close()
+
+
+if __name__ == "__main__":
+	main()
