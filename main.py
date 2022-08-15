@@ -5,13 +5,13 @@ from UI.Ventana_coincidencias import *
 from UI.Ventana_alerta import *
 from UI.Ventana_editar import *
 from UI.Ventana_agregar import *
+from UI.Ventana_directorios import *
 from TOOLS.alumno import *
 from PyQt5.QtWidgets import QFileDialog
 
 '''
 Pendientes:
 
-- QFileDialog.getExistingDirectory(self, "Guardar archivo","." ) para seleccionar directorios
 - Cambiar nombre a menus Importar y Exportar
 
 '''
@@ -31,9 +31,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 		self.setupUi(self)
 		self.tabWidget.setCurrentIndex(0)
 
-		rutas = extraer_historial(".rutas.json")
-		self.Ruta_Base = rutas["Base_datos"]
-		self.Ruta_PDF = rutas["Base_PDF"]
+		self.Ruta_dir = ".rutas.json"
+		self.Set_RutasBases()
 		self.Ruta_Historial = ".historial.json"
 
 		self.Listas = self.Extraer_()
@@ -46,6 +45,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 		self.actionOrganizar_PDFs.triggered.connect(self.Org_PDFs_)
 		self.actionImportar_JSON.triggered.connect(self.ImportarJSON)
 		self.actionExportar_JSON.triggered.connect(self.ExportarJSON)
+		self.actionEditar_directorios.triggered.connect(self.Editar_Dir)
 
 		self.BotonBuscar.clicked.connect(self.Buscar)
 		self.BotonAgregar.clicked.connect(self.AgregarBoton)
@@ -67,6 +67,13 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 			L.append(Alumno(*alumno))
 
 		return TodosMisAlumnos(L, self.Ruta_PDF, self.Ruta_Base)
+
+	#-------- Elegir directorios de las bases de datos----------------------------------------------
+
+	def Set_RutasBases(self):
+		rutas = extraer_historial(self.Ruta_dir)
+		self.Ruta_Base = rutas["Base_datos"]
+		self.Ruta_PDF = rutas["Base_PDF"]
 
 	#--------Mostrar mensajes al usuario -----------------------------------------------------------
 
@@ -141,6 +148,14 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 	def Exportar_(self):
 		self.Listas.ReescribirBaseDatos(False)
 		self.MensajeUser(f'La base de datos {self.Ruta_Base}/ ha sido actualizada')
+
+	# ------ Editar los directorio de trabajo -------------------------------------------------------
+
+	def Editar_Dir(self):
+
+		self.VentanaEditar_dir = V_EditarDirectorios()
+		self.VentanaEditar_dir.EditarDirectorios(self.Ruta_dir, self.Set_RutasBases)
+		self.VentanaEditar_dir.show()
 
 	# ------- Filtro de señales de teclado -----------------------------------------------------------
 
@@ -366,6 +381,51 @@ class V_Agregar(QtWidgets.QDialog, Ui_VentanaAgregar):
 		horario = self.a_horario.text().strip()
 
 		self.f([n, nr, c, cu, curso, plantel, horario])
+
+#|------------------------------------------------------------------------------------------------------|
+#|------       Clase ventana para agregar                                                  -------------|
+#|------------------------------------------------------------------------------------------------------|
+
+class V_EditarDirectorios(QtWidgets.QDialog, Ui_Ventana_Directorios):
+
+	''' Formulario para editar los directorios para la base de datos y los PDF de los alumnos '''
+
+	def __init__(self, *args, **kwargs):
+		QtWidgets.QDialog.__init__(self, *args, **kwargs)
+		self.setupUi(self)
+
+		self.Boton_BaseDatos.clicked.connect(lambda: self.Botonelegir("Base_datos"))
+		self.Boton_BasePDF.clicked.connect(lambda: self.Botonelegir("Base_PDF"))
+
+		self.buttonBox.accepted.connect(self.Aceptado)
+
+	def EditarDirectorios(self,ruta,f):
+		self.F = f
+		self.Ruta = ruta
+
+		self.dicc = extraer_historial(ruta)
+
+		self.Entrada_BaseDatos.setText(self.dicc["Base_datos"])
+		self.Entrada_BasePDF.setText(self.dicc["Base_PDF"])
+
+
+	def Botonelegir(self, eleccion):
+		ruta = QFileDialog.getExistingDirectory(self, eleccion.replace("_"," "), self.dicc[eleccion])
+
+		if eleccion == "Base_datos":
+			self.Entrada_BaseDatos.setText(ruta)
+		else:
+			self.Entrada_BasePDF.setText(ruta)
+
+
+	def Aceptado(self):
+		base = self.Entrada_BaseDatos.text()
+		base_pdf = self.Entrada_BasePDF.text()
+
+		r_historial("Base_datos",base,self.Ruta)
+		r_historial("Base_PDF",base_pdf,self.Ruta)
+
+		self.F()
 
 #|------------------------------------------------------------------------------------------------------|
 #|------------------------------------------------------------------------------------------------------|
