@@ -109,6 +109,7 @@ def Abrete(ruta):
 def extraer_historial(ruta_historial):
 	entrada = open(ruta_historial, "r")
 	dcc = "".join(entrada.readlines())
+	entrada.close()
 
 	return json.loads(dcc)
 
