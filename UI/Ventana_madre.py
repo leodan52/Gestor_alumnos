@@ -105,6 +105,8 @@ class Ui_MainWindow(object):
         self.actionImportar_JSON.setObjectName("actionImportar_JSON")
         self.actionExportar_JSON = QtWidgets.QAction(MainWindow)
         self.actionExportar_JSON.setObjectName("actionExportar_JSON")
+        self.actionEditar_directorios = QtWidgets.QAction(MainWindow)
+        self.actionEditar_directorios.setObjectName("actionEditar_directorios")
         self.menuJSON.addAction(self.actionImportar_JSON)
         self.menuJSON.addAction(self.actionExportar_JSON)
         self.menuasdasd.addAction(self.actionImportar)
@@ -112,6 +114,7 @@ class Ui_MainWindow(object):
         self.menuasdasd.addAction(self.actionGenerar_lista)
         self.menuasdasd.addAction(self.actionOrganizar_PDFs)
         self.menuasdasd.addAction(self.menuJSON.menuAction())
+        self.menuCursos.addAction(self.actionEditar_directorios)
         self.menuBar.addAction(self.menuasdasd.menuAction())
         self.menuBar.addAction(self.menuCursos.menuAction())
 
@@ -138,6 +141,7 @@ class Ui_MainWindow(object):
         self.actionOrganizar_PDFs.setText(_translate("MainWindow", "Organizar PDFs"))
         self.actionImportar_JSON.setText(_translate("MainWindow", "Importar JSON"))
         self.actionExportar_JSON.setText(_translate("MainWindow", "Exportar JSON"))
+        self.actionEditar_directorios.setText(_translate("MainWindow", "Editar directorios"))
 
 
 if __name__ == "__main__":

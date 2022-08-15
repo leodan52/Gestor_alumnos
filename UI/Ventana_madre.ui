@@ -175,6 +175,7 @@
     <property name="title">
      <string>Cursos</string>
     </property>
+    <addaction name="actionEditar_directorios"/>
    </widget>
    <addaction name="menuasdasd"/>
    <addaction name="menuCursos"/>
@@ -207,6 +208,11 @@
   <action name="actionExportar_JSON">
    <property name="text">
     <string>Exportar JSON</string>
+   </property>
+  </action>
+  <action name="actionEditar_directorios">
+   <property name="text">
+    <string>Editar directorios</string>
    </property>
   </action>
  </widget>
