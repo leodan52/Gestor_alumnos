@@ -165,8 +165,14 @@
      <addaction name="actionImportar_JSON"/>
      <addaction name="actionExportar_JSON"/>
     </widget>
-    <addaction name="actionImportar"/>
-    <addaction name="actionExportar"/>
+    <widget class="QMenu" name="menuBase_de_datos">
+     <property name="title">
+      <string>Base de datos</string>
+     </property>
+     <addaction name="actionImportar"/>
+     <addaction name="actionExportar"/>
+    </widget>
+    <addaction name="menuBase_de_datos"/>
     <addaction name="actionGenerar_lista"/>
     <addaction name="actionOrganizar_PDFs"/>
     <addaction name="menuJSON"/>
