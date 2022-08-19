@@ -6,7 +6,9 @@ import json
 
 def main():
 
-	historial("../.rutas.json")
+	ruta = "../Cursos"
+
+	print(check_dir(ruta))
 
 
 #*-------------------------------------------------------------------------------------------*
@@ -52,6 +54,29 @@ def extraer(ruta):
 				Alumnos.close()
 
 	return lista
+
+#--------------------------------------------------------------------------------------------
+
+def Agregar2TXT(ruta,lista):
+	try:
+		entrada = open(ruta, "r")
+		lineas = entrada.readlines()
+		entrada.close()
+	except FileNotFoundError:
+		lineas = []
+
+	salida = open(ruta, "w")
+
+	for i in lineas:
+		if i.strip() == "":
+			continue
+		print(i.rstrip(), file=salida)
+
+	for j in lista:
+		print(j, file=salida)
+
+	salida.close()
+
 
 #--------------------------------------------------------------------------------------------
 
@@ -107,11 +132,48 @@ def Abrete(ruta):
 #--------------------------------------------------------------------------------------------
 
 def extraer_historial(ruta_historial):
-	entrada = open(ruta_historial, "r")
-	dcc = "".join(entrada.readlines())
-	entrada.close()
+	try:
+		entrada = open(ruta_historial, "r")
+		lineas = entrada.readlines()
+		entrada.close()
+	except FileNotFoundError:
+		salida = open(ruta_historial, "w")
+		print("{}",file=salida)
+		salida.close()
+		lineas = "{}"
+
+	dcc = "".join(lineas)
 
 	return json.loads(dcc)
+
+#--------------------------------------------------------------------------------------------
+
+def Existe_con(ruta,dicc):
+	try:
+		entrada = open(ruta, "r")
+		lineas = entrada.readlines()
+		lineas = "".join(lineas)
+		entrada.close()
+	except FileNotFoundError:
+		lineas = "{}"
+
+	dicc_in = json.loads(lineas)
+	aux = 0
+
+	for i in dicc:
+		if i not in dicc_in:
+			dicc_in[i] = dicc[i]
+			aux += 1
+		elif dicc_in[i].strip() == "":
+			dicc_in[i] = dicc[i]
+			aux += 1
+
+	if aux != 0:
+		dicc_in = json.dumps(dicc_in)
+
+		salida = open(ruta, "w")
+		print(dicc_in,file=salida)
+		salida.close()
 
 #--------------------------------------------------------------------------------------------
 
@@ -126,6 +188,38 @@ def r_historial(dic, nuevo, ruta):
 
 	salida.close()
 
+#------------------------------------------------------------------------------------------------------------
+
+def mensaje_print(cadena):
+	print(cadena)
+#------------------------------------------------------------------------------------------------------------
+
+def check_dir(ruta, f_m = mensaje_print):
+
+	n = len(ruta.split("/"))
+	max_size = 10**6
+
+	for root,dirs,files in os.walk(ruta):
+		m = len(root.split("/"))
+
+		if (m == n or m == n+1) and len(files) != 0:
+			f_m(f'Ruta inválida para usar.\n{ruta} muestra archivos en el primer nivel.\nSolo debe haber directorios')
+			return False
+		if m == n + 2 and len(dirs) != 0:
+			f_m(f'Ruta inválida para usar.\n{ruta} muestra carpetas en el segundo nivel.\nSolo debe haber archivos TXT')
+			return False
+		elif m == n + 2:
+			for i in files:
+				if os.path.splitext(i)[1] != ".txt":
+					f_m(f'El archivo {i} en {root} no es un TXT.\nRuta inválida')
+					return False
+
+				tama = os.path.getsize(f'{root}/{i}')
+				if tama >= max_size:
+					f_m(f'El archivo {i} en {root} es un archivo de 1 mb o más.\nCorre el peligro de perderse.\nRuta inválida.')
+					return False
+
+	return True
 
 if __name__ == "__main__":
 	main()
