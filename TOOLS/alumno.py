@@ -5,6 +5,7 @@ import json
 from tabulate import tabulate as tabla
 import TOOLS.busqueda as bq
 from shutil import rmtree
+from datetime import datetime
 
 
 #*-------------------------------------------------------------------------------------------*
@@ -15,9 +16,13 @@ from shutil import rmtree
 class TodosMisAlumnos:
 
 	def __init__(self,lista_,ruta_pdf,ruta_base_datos):
+
+		''' Clase que contiene las listas de todos los alumnos '''
+
 		self.lista = lista_
 		self.ruta_pdf = ruta_pdf
 		self.ruta_base_datos = ruta_base_datos
+		self.ruta_historial = ".historial_cambios.txt"
 
 #		self.nombre_Listas_salida = "Listas completas.txt"
 
@@ -25,17 +30,56 @@ class TodosMisAlumnos:
 
 	#---------------------------------------------------------------------------------------------
 
-	def NombreListas(self, nombre):
-		self.ruta_base_datos = nombre
+	def Cambios_realizados(self,cadena):
+
+		''' Hace un seguimiento de los cambios sin guardar realizados a la base de datos '''
+
+		try:
+			self.CambiosSinGuardar.append(cadena)
+		except AttributeError:
+			self.CambiosSinGuardar = []
+			self.CambiosSinGuardar.append(cadena)
+
+	#---------------------------------------------------------------------------------------------
+
+	def add_cHistorial(self):
+
+		''' Al importar los cambios a la base de datos, guarda los cambios en el archivo historial y
+			vacía el seguimiento de cambios sin guardar '''
+
+		Agregar2TXT(self.ruta_historial, self.CambiosSinGuardar)
+
+		self.CambiosSinGuardar = []
+
+	#---------------------------------------------------------------------------------------------
+
+#	def NombreListas(self, nombre):
+
+#		''' Método para cambiar la ruta de las bases de datos '''
+
+#		self.ruta_base_datos = nombre
 
 	#--------------------------------------------------------------------------------------------
 
 	def AddAlumno(self,lista):
+
+		''' Agrega alumno a la lista de alumnos '''
+
+#		n, nr, c, cu, curso, plantel, horario
+
+		fecha = datetime.today().strftime('%Y-%m-%d %H:%M')
+
+		cambio = f'{fecha}:\n\t Se agregó el alumno {lista[0]}:\n\t\t Número de registro: {lista[1]}, Carrera: {lista[2]}, Centro universitario: {lista[3]}, Curso: {lista[4]}, Plantel: {lista[5]}, Horario: {lista[6]}'
+
 		self.lista.append(Alumno(*lista))
+		self.Cambios_realizados(cambio)
 
 	#--------------------------------------------------------------------------------------------
 
 	def organizarPDF(self, Consola = True ):
+
+		''' Manipula la base (directorio) que contiene los PDFs y los organiza en directorios por salón.
+			El PDF debe renombrarse usado el nombre del alumno '''
 
 		try:
 			PDFs = os.listdir(self.ruta_pdf)
@@ -82,6 +126,8 @@ class TodosMisAlumnos:
 	def GenerarListas(self, archivo = "Listas completas.txt"):
 		#print("Has invocado al héroe japonés")
 
+		''' Genera listas tabuladas de los alumnos divididos por salones '''
+
 		Salones = dict()
 
 		for alumno in self.lista:
@@ -111,6 +157,9 @@ class TodosMisAlumnos:
 	#--------------------------------------------------------------------------------------------
 
 	def EntregarPDF(self):
+
+		''' Revisa la base de PDFs para verificar si cada alumno entregó o no su archivo PDF '''
+
 		try:
 			cursos = os.listdir(self.ruta_pdf)
 		except FileNotFoundError:
@@ -152,6 +201,8 @@ class TodosMisAlumnos:
 
 	def ReescribirBaseDatos(self, Consola = True):
 
+		''' Reescribe la base de datos principal. Lo anterior se perderá (por ahora) '''
+
 		Salones = dict()
 		rmtree(self.ruta_base_datos)
 
@@ -180,12 +231,17 @@ class TodosMisAlumnos:
 
 			salida.close()
 
+		self.add_cHistorial()
+
 		if Consola:
 			print("\n\t*** La base de datos de alumnos, ha sido actualizada ***")
 
 	#--------------------------------------------------------------------------------------------
 
 	def EditarDatosAlumnos(self):
+
+		''' Menú para editar alumnos desde terminal '''
+
 		print("\n\tBienvenidos al menú de edición\n")
 		print('''
 	En este menú solo puedes editar tres datos de los alumnos: Num.registro, carrera o
@@ -212,6 +268,8 @@ class TodosMisAlumnos:
 	#--------------------------------------------------------------------------------------------
 
 	def consolaEditar(self):
+
+		''' Gestor de edición para terminal '''
 
 		opcion = [""]
 
@@ -248,6 +306,9 @@ class TodosMisAlumnos:
 	#--------------------------------------------------------------------------------------------
 
 	def consolaEditar_GUI(self,cadena,funcion):
+
+		''' Gestor de edición desde pestaña de consola de la GUI. Incompleta '''
+
 		self.operadores = ["nr","c","cu"]
 
 		opcion = cadena.split(",")
@@ -271,6 +332,9 @@ class TodosMisAlumnos:
 	#--------------------------------------------------------------------------------------------
 
 	def MotorEditar(self, opcion):
+
+		''' Motor para edición de datos de alumnos para terminal '''
+
 		if opcion[0].strip() == "nr":
 			dato = "Número de registro"
 		elif opcion[0].strip() == "c":
@@ -281,11 +345,28 @@ class TodosMisAlumnos:
 		indice = bq.buscar(opcion[1],self.lista)
 
 		if indice != "Abortar":
-			self.lista[indice].CambiarDato(dato, opcion[2].strip())
+#			self.lista[indice].CambiarDato(dato, opcion[2].strip())
+			self.MotorEditar_GUI(indice,dato, opcion[2].strip())
+
+	def MotorEditar_GUI(self,indice,dato,nuevo):
+
+		''' Motor para edición de datos de alumnos para GUI'''
+
+		self.lista[indice].DiccAlumno()
+		viejo = self.lista[indice].datos[dato]
+		fecha = datetime.today().strftime('%Y-%m-%d %H:%M')
+
+		cambio = f'{fecha}:\n\tCambio en {self.lista[indice].nombre} del plantel {self.lista[indice].plantel}, curso {self.lista[indice].curso}, horario {self.lista[indice].horario}:\n\t\t Cambió {dato}: {viejo} --> {nuevo}'
+
+		self.lista[indice].CambiarDato(dato,nuevo)
+		self.Cambios_realizados(cambio)
+
 
 	#--------------------------------------------------------------------------------------------
 
 	def BuscarAlumno(self):
+
+		''' Buscar a un alumno por nombre o apellido. Para terminal '''
 
 		print("\n\tAquí puedes buscar a un alumno por nombre o apellido.")
 		print("\tSe desplegaran los datos completos en pantalla. Para terminar escribe exit.\n")
@@ -326,6 +407,10 @@ class TodosMisAlumnos:
 	#--------------------------------------------------------------------------------------------
 
 	def AbrirPDFmenu(self):
+
+		''' Aquí puedes hacer uns búsqueda para abrir el PDF correspondiente a la busqueda del alumno.
+			Para terminal '''
+
 		print("\n\tAquí puedes hacer uns búsqueda para abrir el PDF correspondiente al")
 		print("\tnúméro de registro del alumno si es que este ya lo entregó. Busca por")
 		print("\tnombre o apellido. Para salir escribe exit.\n")
@@ -355,7 +440,7 @@ class TodosMisAlumnos:
 
 	def AbrirPDF(self,indice):
 
-		''' Abrir el documento PDF desde la consola '''
+		''' Abrir el documento PDF desde la terminal '''
 
 		ruta = self.lista[indice].RutaPDF
 
@@ -391,6 +476,9 @@ class TodosMisAlumnos:
 	#------------------JSON Exportar -------------------------------------------------------------
 
 	def Todos2JSON(self,archivo = "alumnos.json"):
+
+		''' Exporta los datos de los alumnos en listas a un archivo JSON '''
+
 		todos = dict()
 		todos["Alumnos"] = []
 		todos["Total alumnos"] = 0
@@ -449,6 +537,10 @@ class TodosMisAlumnos:
 	#-------- Importar JSON -----------------------------------------------------------------
 
 	def ImportJSON(self,archivo = "alumnos.json"):
+
+		''' Importa los datos de los alumnos contenidos en un JSON a las listas. Se debe actualizar
+			la base de datos principal posteriormente '''
+
 		entrada = open(archivo, "r")
 		lineas = entrada.readlines()
 		lineas = "".join(lineas)
@@ -476,6 +568,9 @@ class TodosMisAlumnos:
 class Alumno:
 
 	def __init__(self, nombre, numRegistro, carrera, CU, curso, plantel, horario):
+
+		''' Clase alumnos. Contiene la información de un alumnos '''
+
 		# nombre: Nombre del alumno
 		# numRegristro: Proporcionado al hacer tramites UDG
 		# carrera: Carrera a aspirar
@@ -499,6 +594,9 @@ class Alumno:
 
 	def CambiarDato(self,dato,nuevo):
 
+		''' Cambiar determinado dato por el alumnos. Si el dato no es un atributo, retornará 0,
+			caso contrario, 1 '''
+
 		if dato == "Número de registro":
 			self.nRegistro = nuevo
 		elif dato == "Carrera":
@@ -517,9 +615,14 @@ class Alumno:
 			return 0
 
 		self.DiccAlumno()
+
+		return 1
 	#--------------------------------------------------------------------------------------------
 
 	def DiccAlumno(self):
+
+		''' Genera diccionario que contiene la información del alumno '''
+
 		self.datos = ({ "Nombre" : self.nombre, "Número de registro" : self.nRegistro,
 						"Carrera" : self.carrera, "Centro Universitario" : self.CU,
 						"Curso" : self.curso, "Plantel" : self.plantel, "Horario" : self.horario,
@@ -528,6 +631,9 @@ class Alumno:
 	#-------------------------------------------------------------------------------------------
 
 	def Alumno2JSON(self):
+
+		''' Genera diccionario con los datos del alumno como preparación para exportar a JSON '''
+
 		self.datos = ({"Nombre" : self.nombre, "Número de registro" : self.nRegistro,
 						"Carrera" : self.carrera, "Centro Universitario" : self.CU,
 						"Curso" : self.curso, "Plantel" : self.plantel, "Horario" : self.horario})
