@@ -6,13 +6,15 @@ from UI.Ventana_alerta import *
 from UI.Ventana_editar import *
 from UI.Ventana_agregar import *
 from UI.Ventana_directorios import *
+from UI.Ventana_cerrar import *
 from TOOLS.alumno import *
 from PyQt5.QtWidgets import QFileDialog
 
 '''
 Pendientes:
 
-- Cambiar nombre a menus Importar y Exportar
+- Consola
+- Guardar versiones anteriores de la base de datos
 
 '''
 
@@ -31,9 +33,11 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 		self.setupUi(self)
 		self.tabWidget.setCurrentIndex(0)
 
+#		self.Ruta_main = os.path.dirname(os.path.abspath(__file__))
 		self.Ruta_dir = ".rutas.json"
-		self.Set_RutasBases()
 		self.Ruta_Historial = ".historial.json"
+		self.Necesario_files()
+		self.Set_RutasBases()
 
 		self.Listas = self.Extraer_()
 
@@ -68,21 +72,56 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
 		return TodosMisAlumnos(L, self.Ruta_PDF, self.Ruta_Base)
 
+
+	#-------- Archivos necesarios --------------------------------------------------------------------
+
+
+	def Necesario_files(self):
+
+		''' Genera los archivos necesarios para que el programa funcione correctamente '''
+
+		Rutas = [self.Ruta_dir, self.Ruta_Historial]
+
+		rutas_dict = {"Base_datos": "Cursos", "Base_PDF": "Cursos_pdf"}
+		historial = {"Salida_listas": "./", "Entrada_JSON": "./sin_titulo.json", "Salida_JSON": "./"}
+		conte = [rutas_dict, historial]
+
+
+		for i,j in zip(Rutas, conte):
+			Existe_con(i,j)
+
 	#-------- Elegir directorios de las bases de datos----------------------------------------------
 
 	def Set_RutasBases(self):
+
+		''' Busca en el archivo .rutas.json las rutas de las bases de datos que el usuario elija.
+			Sí el archivo se borra, se crean directorios temporales '''
+
 		rutas = extraer_historial(self.Ruta_dir)
-		self.Ruta_Base = rutas["Base_datos"]
+
+		if check_dir(rutas["Base_datos"], self.Desplegar_Alerta):
+			self.Ruta_Base = rutas["Base_datos"]
+		else:
+			self.Ruta_Base = "./Cursos_Temporal_"
+			r_historial("Base_datos", self.Ruta_Base,self.Ruta_dir)
+
 		self.Ruta_PDF = rutas["Base_PDF"]
 
 	#--------Mostrar mensajes al usuario -----------------------------------------------------------
 
 	def MensajeUser(self,cadena):
+
+		''' Entrega al usuario mensajes del sistema '''
+
 		self.Mensajes2Usuario.setText(cadena)
 
 	#--------Exportar a archivo JSON ----------------------------------------------------------------
 
 	def ExportarJSON(self):
+
+		''' Exporta los datos de los alumnos cargados de la base de datos en un archivo JSON
+			elegido por el usuario '''
+
 		ruta = extraer_historial(self.Ruta_Historial)["Salida_JSON"]
 
 		archivo = QFileDialog.getSaveFileName(self, "Guardar archivo",
@@ -98,6 +137,10 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 	#------- Import JSON----------------------------------------------------------------------------
 
 	def ImportarJSON(self):
+
+		''' Importa datos de un archivo JSON proporcionado por el usuario. La información debe
+			importarse a la base de datos posteriormente para mantener los datos '''
+
 		ruta = extraer_historial(self.Ruta_Historial)["Entrada_JSON"]
 		archivo = QFileDialog.getOpenFileName(self,"Elige el archivo", ruta, "Archivo JSON (*.json)")[0]
 
@@ -112,6 +155,10 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 	#--------Generar Listas Completas.txt -----------------------------------------------------
 
 	def GenerarListas_(self):
+
+		''' Usa el método de la clase TodosMisAlumnos para generar listas tabuladas de los datos
+			de los alumnos proporcionados por la base de datos '''
+
 		# Por alguna razon que desconozco, usar el método directo de TodosMisAlumnos GenerarListas()
 		# en el Qaction generaba un problema: Al Importar_(), ya no funcionaba nuevamente
 
@@ -133,6 +180,10 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 	#------- Organizar PDF -------------------------------------------------------------------------
 
 	def Org_PDFs_(self):
+
+		'''	Utiliza método de TodosMisAlumnos para organizar los PDFs que los alumnos proporcionan
+			como respaldo al número de registro '''
+
 		self.Listas.organizarPDF(False)
 
 		self.MensajeUser(f'Los archivos PDF han sido organizados en {self.Ruta_PDF}/')
@@ -140,12 +191,28 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 	# ------ Refrescar desde base de datos --------------------------------------------------------
 
 	def Importar_(self):
+
+		''' Extrae la información de la base de datos '''
+
 		self.Listas = self.Extraer_()
 		self.MensajeUser(f'La base de datos {self.Ruta_Base}/ ha sido cargada')
 
 	# ------ Reescribir base de datos ----------------------------------------------------------------
 
 	def Exportar_(self):
+
+		''' Actualiza la información de la base de datos agregado los cambios y/o la información
+			importada '''
+
+		if self.Listas.ruta_base_datos != self.Ruta_Base:
+			print("Problemas")
+			return
+		if check_dir(self.Ruta_Base, self.Desplegar_Alerta):
+			pass
+		else:
+			self.MensajeUser(f'No se actualizó la base de datos {self.Ruta_Base}')
+			return
+
 		self.Listas.ReescribirBaseDatos(False)
 		self.MensajeUser(f'La base de datos {self.Ruta_Base}/ ha sido actualizada')
 
@@ -153,8 +220,11 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
 	def Editar_Dir(self):
 
+		''' Proporciona al usuario la opción de elegir la ubicación de las bases de datos: la base
+			principal y la base que contiene los PDFs '''
+
 		self.VentanaEditar_dir = V_EditarDirectorios()
-		self.VentanaEditar_dir.EditarDirectorios(self.Ruta_dir, self.Set_RutasBases)
+		self.VentanaEditar_dir.EditarDirectorios(self.Ruta_dir, self.Set_RutasBases, self.MensajeUser)
 		self.VentanaEditar_dir.show()
 
 	# ------- Filtro de señales de teclado -----------------------------------------------------------
@@ -179,6 +249,9 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 	#---------- Funcion consola ----------------------------------------------------------------------
 
 	def EnterConsola(self):
+
+		''' Motor para consola. Sin terminar '''
+
 		text = self.Consola.text().strip()
 		if text == "":
 			return
@@ -203,8 +276,9 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 		self.MensajeUser("Hecho")
 
 		if len(coincidencias) == 0:
-			self.Alerta = V_Alerta()
-			self.Alerta.show() 							# Desplegamos ventana con mensaje cuando
+			self.Desplegar_Alerta()
+#			self.Alerta = V_Alerta()
+#			self.Alerta.show() 							# Desplegamos ventana con mensaje cuando
 			return										# la busqueda no arreje nada
 		elif len(coincidencias) == 1:
 			indice = list(coincidencias.values())[0]
@@ -235,6 +309,9 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 	#------ Funcion para agregar alumno --------------------------------------------------------
 
 	def AgregarBoton(self):
+
+		''' Despliega ventana formulario para agregar alumno y sus datos '''
+
 		self.V_Add = V_Agregar()
 		self.V_Add.infuncion(self.Agregar_2)
 		self.V_Add.show()
@@ -254,7 +331,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 			self.MensajeUser("No hay PDF disponible")
 
 
-	#---- Funcion para editar en pesataña busqueda-----------------------------------------------
+	#---- Funcion para editar en pestaña busqueda-----------------------------------------------
 
 	def EditarBoton(self):
 
@@ -276,8 +353,50 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 		self.V_E.show()
 
 	def EditarBoton_2(self,dato,nuevo):
-		self.Listas.lista[self.indice].CambiarDato(dato,nuevo)
+		self.Listas.MotorEditar_GUI(self.indice, dato, nuevo)
 		self.Desplegar_alumnos(self.indice)
+
+	#----- Desplegar ventana alerta ---------------------------------------------------------
+
+	def Desplegar_Alerta(self, mensaje = ""):
+
+		''' Despliega ventana de alerta. El mensaje es elegible '''
+
+		# Mensaje predeterminado: No hay resultados
+
+		self.Alerta = V_Alerta()
+		if mensaje != "":
+			self.Alerta.CambiarMensaje(mensaje)
+		self.Alerta.show()
+
+	#-----Evento cerrar---------------------------------------------------------------------------------
+
+	def closeEvent(self,event):
+
+		''' Despliega ventana al cerrar si aún hay cambios sin guardar en la base de datos '''
+
+		event.ignore()
+
+		try:
+			tama = len(self.Listas.CambiosSinGuardar)
+		except AttributeError:
+			event.accept()
+			return
+
+		if tama != 0:
+			self.cerrar_V = V_Cerrar()
+			self.cerrar_V.MostrarCambios(self.Listas.CambiosSinGuardar, self.closeEvent_2)
+			self.cerrar_V.show()
+		else:
+			event.accept()
+
+
+	def closeEvent_2(self, eleccion = "No"):
+		if eleccion == "Si":
+			self.Listas.ReescribirBaseDatos(False)
+		else:
+			self.Listas.CambiosSinGuardar = []
+		self.close()
 
 #|------------------------------------------------------------------------------------------------------|
 #|------ Clase ventana para coincidencias de búsqueda                                      -------------|
@@ -302,12 +421,18 @@ class V_Coincidencias(QtWidgets.QDialog, Ui_Ventana_Coincidencias):
 	#----- Funcion para imprimir las coincidencias y que el usuario eliga la requerida ----------------
 
 	def Imprimir(self):
+
+		# Imprime los rsultados en pantalla
+
 		for i in self.resultados:
 			self.ListaCoincidencias.addItem(i)
 
 	#------Funcion vinculada al boton Ok, para activar la funcion --------------------------------------
 
 	def Aceptar(self):
+
+		# Selecciona el alumno y acepta
+
 		nombre = self.ListaCoincidencias.currentItem().text()
 		self.eleccion(self.resultados[nombre])
 
@@ -334,6 +459,10 @@ class V_Editar(QtWidgets.QDialog, Ui_VentanaEditar):
 		self.F(self.d, nuevo)
 
 	def EditarAtributo(self, nombre ,dato, funcion):
+
+		''' Importa datos de la clase principal. Admite el nombre del alumno, el dato a editar y
+			la función necesaria para editar en la base de datos: EditarAtributo(nombre ,dato, funcion) '''
+
 		self.NombreAlumno.setText(nombre)
 		self.AtributoEditar.setText(dato + ": ")
 		self.F = funcion
@@ -352,6 +481,11 @@ class V_Alerta(QtWidgets.QDialog, Ui_VentanaAlerta):
 		self.setupUi(self)
 
 	def CambiarMensaje(self,cadena):
+
+		''' Elige el mensaje a desplegar '''
+
+		# Predeterminado: No hay resultados
+
 		self.MensajeNoHay.setText(cadena)
 
 #|------------------------------------------------------------------------------------------------------|
@@ -399,9 +533,13 @@ class V_EditarDirectorios(QtWidgets.QDialog, Ui_Ventana_Directorios):
 
 		self.buttonBox.accepted.connect(self.Aceptado)
 
-	def EditarDirectorios(self,ruta,f):
-		self.F = f
-		self.Ruta = ruta
+	def EditarDirectorios(self,ruta,f,f_m):
+
+		''' Importar datos a la clase '''
+
+		self.F = f				# funcion para actualizar las rutas de los directorios
+		self.F_m = f_m			# Funcion para mostrar mensajes al usuario
+		self.Ruta = ruta		# Lugar donde se guardan las rutas de las bases de datos
 
 		self.dicc = extraer_historial(ruta)
 
@@ -426,6 +564,39 @@ class V_EditarDirectorios(QtWidgets.QDialog, Ui_Ventana_Directorios):
 		r_historial("Base_PDF",base_pdf,self.Ruta)
 
 		self.F()
+		self.F_m(f'Las bases de datos han sido cambiadas. No olvides importar.')
+
+
+#|------------------------------------------------------------------------------------------------------|
+#|------       Clase ventana para alertar durante el cierre                                -------------|
+#|------------------------------------------------------------------------------------------------------|
+
+class V_Cerrar(QtWidgets.QDialog, Ui_VentanaCerrar):
+
+	''' Si al cerrar hay cambios sin exportar a la base de datos esta ventana se desplegará '''
+
+	def __init__(self, *args, **kwargs):
+		QtWidgets.QDialog.__init__(self, *args, **kwargs)
+		self.setupUi(self)
+
+		self.buttonBox.accepted.connect(self.si_eleccion)
+		self.buttonBox.rejected.connect(self.no_eleccion)
+		self.NoCerrar.clicked.connect(self.close)
+
+	def MostrarCambios(self,lista, f):
+		self.F = f
+
+		cadena = "\n".join(lista)
+
+		self.MostrarContenido.setText(cadena)
+
+	def si_eleccion(self):
+		self.F("Si")
+
+	def no_eleccion(self):
+		self.F()
+
+
 
 #|------------------------------------------------------------------------------------------------------|
 #|------------------------------------------------------------------------------------------------------|
