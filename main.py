@@ -8,7 +8,7 @@ from UI.Ventana_agregar import *
 from UI.Ventana_directorios import *
 from UI.Ventana_cerrar import *
 from TOOLS.alumno import *
-from PyQt5.QtWidgets import QFileDialog
+from PyQt5.QtWidgets import QFileDialog, QCompleter
 
 '''
 Pendientes:
@@ -313,7 +313,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 		''' Despliega ventana formulario para agregar alumno y sus datos '''
 
 		self.V_Add = V_Agregar()
-		self.V_Add.infuncion(self.Agregar_2)
+		self.V_Add.infuncion(self.Agregar_2, self.Listas.Data)
 		self.V_Add.show()
 
 	def Agregar_2(self,lista):
@@ -349,7 +349,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 			return
 
 		self.V_E = V_Editar()
-		self.V_E.EditarAtributo(datos["Nombre"], atri, self.EditarBoton_2)
+		self.V_E.EditarAtributo(datos["Nombre"], atri, self.EditarBoton_2, self.Listas.Data)
 		self.V_E.show()
 
 	def EditarBoton_2(self,dato,nuevo):
@@ -458,7 +458,7 @@ class V_Editar(QtWidgets.QDialog, Ui_VentanaEditar):
 
 		self.F(self.d, nuevo)
 
-	def EditarAtributo(self, nombre ,dato, funcion):
+	def EditarAtributo(self, nombre ,dato, funcion, op = ""):
 
 		''' Importa datos de la clase principal. Admite el nombre del alumno, el dato a editar y
 			la función necesaria para editar en la base de datos: EditarAtributo(nombre ,dato, funcion) '''
@@ -467,6 +467,13 @@ class V_Editar(QtWidgets.QDialog, Ui_VentanaEditar):
 		self.AtributoEditar.setText(dato + ": ")
 		self.F = funcion
 		self.d = dato
+
+		if op == "" or dato in ["Nombre", "Número de registro"]:
+			return
+
+		self.completa = QCompleter(op[dato])
+		self.completa.setCaseSensitivity(QtCore.Qt.CaseInsensitive)
+		self.EntradaEditar.setCompleter(self.completa)
 
 #|------------------------------------------------------------------------------------------------------|
 #|------       Clase ventana para alertas                                                  -------------|
@@ -502,8 +509,23 @@ class V_Agregar(QtWidgets.QDialog, Ui_VentanaAgregar):
 
 		self.buttonBox.accepted.connect(self.addAlumno)
 
-	def infuncion(self,funcion):
+	def infuncion(self, funcion, op = "n"):
 		self.f = funcion
+
+		if op == "n":
+			return
+
+		self.completa = dict()
+		for i in op:
+			self.completa[i] = QCompleter(op[i])
+			self.completa[i].setCaseSensitivity(QtCore.Qt.CaseInsensitive)
+
+		self.a_carrera.setCompleter(self.completa["Carrera"])
+		self.a_CU.setCompleter(self.completa["Centro Universitario"])
+		self.a_curso.setCompleter(self.completa["Curso"])
+		self.a_plantel.setCompleter(self.completa["Plantel"])
+		self.a_horario.setCompleter(self.completa["Horario"])
+
 
 	def addAlumno(self):
 		n = self.a_nombre.text().strip()
@@ -513,6 +535,9 @@ class V_Agregar(QtWidgets.QDialog, Ui_VentanaAgregar):
 		curso = self.a_curso.text().strip()
 		plantel = self.a_plantel.text().strip()
 		horario = self.a_horario.text().strip()
+
+		if "" in [n, curso, plantel, horario]:
+			return
 
 		self.f([n, nr, c, cu, curso, plantel, horario])
 
