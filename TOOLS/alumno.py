@@ -24,9 +24,41 @@ class TodosMisAlumnos:
 		self.ruta_base_datos = ruta_base_datos
 		self.ruta_historial = ".historial_cambios.txt"
 
-#		self.nombre_Listas_salida = "Listas completas.txt"
-
 		self.EntregarPDF()
+		self.UsedData()
+
+	#---------------------------------------------------------------------------------------------
+
+	def UsedData(self):
+
+		if hasattr(self, "Data"):
+			pass
+		else:
+			self.Data = dict()
+
+			self.Data["Plantel"] = []
+			self.Data["Curso"] = []
+			self.Data["Horario"] = []
+
+			self.Data["Carrera"] = []
+			self.Data["Centro Universitario"] = []
+
+
+		for alumno in self.lista:
+			if alumno.plantel not in self.Data["Plantel"]:
+				self.Data["Plantel"].append(alumno.plantel)
+			if alumno.curso not in self.Data["Curso"]:
+				self.Data["Curso"].append(alumno.curso)
+			if alumno.horario not in self.Data["Horario"]:
+				self.Data["Horario"].append(alumno.horario)
+
+			if alumno.carrera not in self.Data["Carrera"]:
+				self.Data["Carrera"].append(alumno.carrera)
+			if alumno.CU not in self.Data["Centro Universitario"]:
+				self.Data["Centro Universitario"].append(alumno.CU)
+
+		for i in self.Data:
+			self.Data[i].sort()
 
 	#---------------------------------------------------------------------------------------------
 
@@ -73,6 +105,7 @@ class TodosMisAlumnos:
 
 		self.lista.append(Alumno(*lista))
 		self.Cambios_realizados(cambio)
+		self.UsedData()
 
 	#--------------------------------------------------------------------------------------------
 
@@ -264,6 +297,7 @@ class TodosMisAlumnos:
 		self.operadores = ["nr","c","cu"]
 		self.consolaEditar()
 		self.GenerarListas()
+		self.UsedData()
 
 	#--------------------------------------------------------------------------------------------
 
@@ -360,6 +394,7 @@ class TodosMisAlumnos:
 
 		self.lista[indice].CambiarDato(dato,nuevo)
 		self.Cambios_realizados(cambio)
+		self.UsedData()
 
 
 	#--------------------------------------------------------------------------------------------
