@@ -31,10 +31,12 @@ def extraer(ruta):
 	for Plantel in Planteles:
 		ruta1 = ruta + "/" + Plantel
 		Cursos = os.listdir(ruta1)
+		Cursos.sort()
 
 		for Curso in Cursos:
 			ruta2 = ruta1 + "/" + Curso
 			Horarios = os.listdir(ruta2)
+			Horarios.sort()
 
 			for Horario in Horarios:
 				ruta3 = ruta2 + "/" + Horario
@@ -45,7 +47,12 @@ def extraer(ruta):
 				for Alumno in Alumnos:
 					Alumno = Alumno.strip()
 					#print(Alumno)
-					nombre,numRegistro,carrera,CU = Alumno.split("&")
+					try:
+						nombre,numRegistro,carrera,CU = Alumno.split("&")
+					except ValueError:
+						mensaje = f'En {Plantel}/{Curso}/{Horario}. La linea debe tener 4 datos separados por &'
+						Errores_Escritura(Alumno, mensaje)
+						continue
 					nombre,numRegistro,carrera,CU = nombre.strip(), \
 					numRegistro.strip(),carrera.strip(),CU.strip()
 
@@ -54,6 +61,44 @@ def extraer(ruta):
 				Alumnos.close()
 
 	return lista
+
+#--------------------------------------------------------------------------------------------
+
+def	Errores_Escritura(cadena, mensaje = ""):
+	print(f'Error: {mensaje}')
+	print(f'\t{cadena}')
+
+#--------------------------------------------------------------------------------------------
+
+def PrepararJSON(cadena):
+
+	# Funcion prueba
+
+	salida = []
+
+	cadena = cadena.replace(" {", "{").replace(", ", ",")
+	T,n,m = "\t",0,1
+
+	for i in cadena:
+		if i in ["[","{"]:
+			n += 1
+		elif i in ["]","}"]:
+			n -= 1
+		if i == f'"':
+			m = -m
+
+		if i in [",","[","{"] and m != -1:
+			T_ = T*n
+			salida.append(f'{i}\n{T_}')
+		elif i in ["]","}"]:
+			T_ = T*n
+			salida.append(f'\n{T_}{i}')
+		elif i == ",":
+			salida.append(f'{i} ')
+		else:
+			salida.append(i)
+
+	return "".join(salida)
 
 #--------------------------------------------------------------------------------------------
 

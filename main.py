@@ -14,7 +14,7 @@ from PyQt5.QtWidgets import QFileDialog, QCompleter
 Pendientes:
 
 - Consola
-- Guardar versiones anteriores de la base de datos
+- Botón eliminar alumno
 
 '''
 
@@ -394,8 +394,10 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 	def closeEvent_2(self, eleccion = "No"):
 		if eleccion == "Si":
 			self.Listas.ReescribirBaseDatos(False)
+			self.Listas.Control_version()
 		else:
 			self.Listas.CambiosSinGuardar = []
+
 		self.close()
 
 #|------------------------------------------------------------------------------------------------------|

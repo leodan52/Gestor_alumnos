@@ -22,10 +22,55 @@ class TodosMisAlumnos:
 		self.lista = lista_
 		self.ruta_pdf = ruta_pdf
 		self.ruta_base_datos = ruta_base_datos
-		self.ruta_historial = ".historial_cambios.txt"
+		self.ruta_historial = f'{os.path.dirname(self.ruta_base_datos)}/.CACHE/historial_cambios.txt'
 
+		self.Control_version()
 		self.EntregarPDF()
 		self.UsedData()
+
+	#---------------------------------------------------------------------------------------------
+
+	def Control_version(self):
+		versiones_ruta = f'{os.path.dirname(self.ruta_base_datos)}/.CACHE/Historial_versiones'
+		maxi = 50
+
+		if os.path.dirname(self.ruta_base_datos) == "":
+			versiones_ruta = f'.CACHE/Historial_versiones'
+			self.ruta_historial = f'.CACHE/historial_cambios.txt'
+
+		os.makedirs(versiones_ruta,exist_ok = True)
+
+		versiones = os.listdir(versiones_ruta)
+
+		date = datetime.today().strftime('%Y-%m-%d %H_%M_%S')
+		add_version = f'{versiones_ruta}/{date}.json'
+
+		if versiones == []:
+			self.Todos2JSON(add_version)
+			return
+
+		versiones.sort()
+		ruta_ulti = f'{versiones_ruta}/{versiones[-1]}'
+		ulti = self.ImportJSON(ruta_ulti, False)
+
+		nueva = self.Todos2JSON("", False)
+
+		if nueva == ulti:
+			return
+
+		self.Todos2JSON(add_version)
+		versiones.append("")
+
+		if len(versiones) > maxi:
+			n = len(versiones)
+			delta = n - maxi
+		else:
+			return
+
+		for i in versiones:
+			if versiones.index(i) == delta:
+				break
+			os.remove(f'{versiones_ruta}/{i}')
 
 	#---------------------------------------------------------------------------------------------
 
@@ -510,7 +555,7 @@ class TodosMisAlumnos:
 
 	#------------------JSON Exportar -------------------------------------------------------------
 
-	def Todos2JSON(self,archivo = "alumnos.json"):
+	def Todos2JSON(self, archivo = "alumnos.json", salida_file = True):
 
 		''' Exporta los datos de los alumnos en listas a un archivo JSON '''
 
@@ -549,29 +594,19 @@ class TodosMisAlumnos:
 
 
 		cadena = json.dumps(todos,ensure_ascii=False)
-		cadena = cadena.replace(" {", "{").replace(", ", ",")
-		T,n = "\t",0
 
-		salida = open(archivo, "w")
+		cadena = PrepararJSON(cadena)
 
-		for i in cadena:
-			if i in ["[","{"]:
-				n += 1
-			elif i in ["]","}"]:
-				n -= 1
-			if i in [",","[","{"]:
-				print(i,file=salida)
-				print(T*n, end="",file=salida)
-			elif i in ["]","}"]:
-				print( "\n" + T*n + i, end="",file=salida)
-			else:
-				print(i, end="",file=salida)
-
-		salida.close()
+		if salida_file:
+			salida = open(archivo, "w")
+			print(cadena, file=salida)
+			salida.close()
+		else:
+			return todos
 
 	#-------- Importar JSON -----------------------------------------------------------------
 
-	def ImportJSON(self,archivo = "alumnos.json"):
+	def ImportJSON(self, archivo = "alumnos.json", importar = True):
 
 		''' Importa los datos de los alumnos contenidos en un JSON a las listas. Se debe actualizar
 			la base de datos principal posteriormente '''
@@ -583,22 +618,29 @@ class TodosMisAlumnos:
 		lineas = lineas.replace("\n","")
 		entrada.close()
 
-		self.lista = []
 
 		aux = json.loads(lineas)
 
-		datos = json.loads(lineas)["Alumnos"]
+		datos = json.loads(lineas)
 
-		for alumno in datos:
+		if importar:
+			pass
+		else:
+			return datos
+
+		self.lista = []
+
+		for alumno in datos["Alumnos"]:
 			n, nr, c = alumno["Nombre"],alumno["Número de registro"],alumno["Carrera"]
 			cu = alumno["Centro Universitario"]
 			curso,plantel,horario = alumno["Curso"],alumno["Plantel"],alumno["Horario"]
 
 			self.lista.append(Alumno(n,nr,c,cu,curso,plantel,horario))
 
-#--------------------------------------------------------------------------------------------
-#--------------------------------------------------------------------------------------------
 
+
+#--------------------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------------------
 
 class Alumno:
 
