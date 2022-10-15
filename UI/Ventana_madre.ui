@@ -76,8 +76,15 @@
            <item>
             <widget class="QWidget" name="widget_2" native="true">
              <layout class="QGridLayout" name="gridLayout_2">
+              <item row="2" column="0">
+               <widget class="QPushButton" name="BotonEditar">
+                <property name="text">
+                 <string>Editar</string>
+                </property>
+               </widget>
+              </item>
               <item row="5" column="0">
-               <spacer name="verticalSpacer">
+               <spacer name="verticalSpacer_3">
                 <property name="orientation">
                  <enum>Qt::Vertical</enum>
                 </property>
@@ -96,10 +103,10 @@
                 </property>
                </widget>
               </item>
-              <item row="2" column="0">
-               <widget class="QPushButton" name="BotonEditar">
+              <item row="6" column="0">
+               <widget class="QPushButton" name="BotonEliminar">
                 <property name="text">
-                 <string>Editar</string>
+                 <string>Eliminar</string>
                 </property>
                </widget>
               </item>
@@ -174,13 +181,14 @@
     </widget>
     <addaction name="menuBase_de_datos"/>
     <addaction name="actionGenerar_lista"/>
-    <addaction name="actionOrganizar_PDFs"/>
     <addaction name="menuJSON"/>
    </widget>
    <widget class="QMenu" name="menuCursos">
     <property name="title">
      <string>Cursos</string>
     </property>
+    <addaction name="actionOrganizar_PDFs"/>
+    <addaction name="actionEscanear_PDF"/>
     <addaction name="actionEditar_directorios"/>
    </widget>
    <addaction name="menuasdasd"/>
@@ -188,12 +196,12 @@
   </widget>
   <action name="actionImportar">
    <property name="text">
-    <string>Importar</string>
+    <string>Cargar</string>
    </property>
   </action>
   <action name="actionExportar">
    <property name="text">
-    <string>Exportar</string>
+    <string>Actualizar</string>
    </property>
   </action>
   <action name="actionGenerar_lista">
@@ -219,6 +227,11 @@
   <action name="actionEditar_directorios">
    <property name="text">
     <string>Editar directorios</string>
+   </property>
+  </action>
+  <action name="actionEscanear_PDF">
+   <property name="text">
+    <string>Escanear PDFs</string>
    </property>
   </action>
  </widget>

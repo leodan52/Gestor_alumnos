@@ -2,7 +2,13 @@
 
 import os, sys, subprocess
 from webbrowser import open_new
-import json
+import json, fitz
+from pytesseract import pytesseract
+	# necesario
+	# sudo apt install tesseract-ocr
+	# sudo apt-get install tesseract-ocr-spa
+from PIL import Image
+from pdf2image import convert_from_path
 
 def main():
 
@@ -14,6 +20,35 @@ def main():
 #*-------------------------------------------------------------------------------------------*
 #*------ Funciones especiales----------------------------------------------------------------*
 #*-------------------------------------------------------------------------------------------*
+
+def Image2texto(ruta):
+	Im_ruta = ruta.replace("pdf", "png")
+	Im_ruta = os.path.basename(Im_ruta)
+
+	try:
+		os.mkdir(".Imagenes_temp")
+	except FileExistsError:
+		pass
+
+	try:
+		Im = Image.open(f'.Imagenes_temp/{Im_ruta}')
+	except FileNotFoundError:
+		PDF = convert_from_path(ruta)
+		for i in PDF:
+			i.save(f'.Imagenes_temp/{Im_ruta}', "PNG", dpi=(300, 300))
+		Im = Image.open(f'.Imagenes_temp/{Im_ruta}')
+
+	print(f'Escaneando en imagen "{ruta}"')
+
+	configurar = "-l spa --psm 11"
+	text = pytesseract.image_to_string(Im, config=configurar).replace("\n", " ")
+	text = QuitarMEspacios(text).lower().strip()
+
+	if text == "":
+		print(f'\tFalló escaneo en "{ruta}"')
+
+	return text
+
 
 def extraer(ruta):
 	# Funcion que recolecta a los alumnos dentro de la carpeta Cursos
@@ -70,13 +105,20 @@ def	Errores_Escritura(cadena, mensaje = ""):
 
 #--------------------------------------------------------------------------------------------
 
-def PrepararJSON(cadena):
+def PrepararJSON(cadena, cadena_not = False):
 
 	# Funcion prueba
 
+	if cadena_not:
+		cadena = json.dumps(cadena,ensure_ascii=False)
+
+
 	salida = []
 
-	cadena = cadena.replace(" {", "{").replace(", ", ",")
+	cadena = cadena.replace(", ", ",")
+	for ii in ["{", "[", "("]:
+		cadena = cadena.replace(f' {ii}', ii)
+		cadena = cadena.replace(f'{ii} ', ii)
 	T,n,m = "\t",0,1
 
 	for i in cadena:
@@ -87,18 +129,40 @@ def PrepararJSON(cadena):
 		if i == f'"':
 			m = -m
 
-		if i in [",","[","{"] and m != -1:
+		if i in [",","[","{","("] and m != -1:
 			T_ = T*n
-			salida.append(f'{i}\n{T_}')
+			if i not in [","]:
+				T_a = "\n" + T*(n-1)
+			else:
+				T_a = ""
+			salida.append(f'{T_a}{i}\n{T_}')
 		elif i in ["]","}"]:
 			T_ = T*n
 			salida.append(f'\n{T_}{i}')
-		elif i == ",":
+		elif i in [","]:
 			salida.append(f'{i} ')
 		else:
 			salida.append(i)
 
-	return "".join(salida)
+	aux = "".join(salida)
+	salida = []
+
+	for i in aux.split("\n"):
+		i = i.rstrip()
+		if i == "":
+			continue
+		salida.append(i)
+
+	return "\n".join(salida)
+
+def Entrada4JSON(lista):
+
+	lineas = "".join(lista)
+	lineas = lineas.replace("\t","")
+	lineas = lineas.replace("\n","")
+
+	return json.loads(lineas)
+
 
 #--------------------------------------------------------------------------------------------
 
@@ -265,6 +329,106 @@ def check_dir(ruta, f_m = mensaje_print):
 					return False
 
 	return True
+
+
+def comparar_C(antiguo,nuevo):
+
+	set_old = set(antiguo)
+	set_new = set(nuevo)
+
+	eli = set_old - set_new
+	agr = set_new - set_old
+
+	return list(eli), list(agr)
+
+
+def Inter_C(C1,C2):
+	return set(C1) & set(C2)
+
+
+def Extraer2TXT(ruta):
+	Lista = []
+	salida = open(ruta, "r")
+	for i in salida:
+		i = i.strip()
+		if i == "":
+			continue
+		Lista.append(i)
+	salida.close()
+	return Lista
+
+
+def PDF2Cadena(ruta):
+	PDF = ProcesarTextPDf(ruta).split(" ")
+#	palab = cadena.split(" ")
+#	m = 0
+#	n = len(palab)
+
+	if len(PDF) == 1 and PDF[0].strip() == "":
+		PDF = Image2texto(ruta).split(" ")
+		#return 101
+
+#	for i in palab:
+#		if i in PDF:
+#			m += 1
+
+#	return 100*m/n
+	return PDF
+
+def BuscarEnCadena(cadena1, lista):
+	Palabras = cadena1.split(" ")
+	m = 0
+	n = len(Palabras)
+
+	for i in Palabras:
+		if i in lista:
+			m += 1
+
+	porc = 100*m/n
+
+	if porc != 0:
+		return porc
+	else:
+		lista2cadena = "".join(lista)
+		m = 0
+
+	for i in Palabras:
+		if lista2cadena.find(i) != -1:
+			m += 1
+
+	porc = 100*m/n
+
+	return porc
+
+def ProcesarTextPDf(ruta):
+
+	aux = ExtraerTextPDF(ruta)
+	aux = aux.replace("\n", " ").lower()
+	aux_ = aux.split(" ")
+	aux = []
+
+	for i in aux_:
+		i = i.strip()
+		if i == "":
+			continue
+		aux.append(i)
+
+	aux = " ".join(aux)
+
+	return aux
+
+def ExtraerTextPDF(ruta):
+
+	with fitz.open(ruta) as doc:
+		lista = []
+		text = ""
+
+		for page in doc:
+			text_ = page.get_text()
+			text += text_.replace('�','').strip()
+
+	return text
+
 
 if __name__ == "__main__":
 	main()

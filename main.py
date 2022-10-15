@@ -9,12 +9,13 @@ from UI.Ventana_directorios import *
 from UI.Ventana_cerrar import *
 from TOOLS.alumno import *
 from PyQt5.QtWidgets import QFileDialog, QCompleter
+import time
 
 '''
 Pendientes:
 
 - Consola
-- Botón eliminar alumno
+- Botón actualizar
 
 '''
 
@@ -43,18 +44,28 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
 		self.MensajeUser(f'Bienvenido. El fichero {self.Ruta_Base}/ ha sido cargado')
 
+		self.ActualizarCom()
+
 		self.actionImportar.triggered.connect(self.Importar_)
 		self.actionExportar.triggered.connect(self.Exportar_)
 		self.actionGenerar_lista.triggered.connect(self.GenerarListas_)
-		self.actionOrganizar_PDFs.triggered.connect(self.Org_PDFs_)
 		self.actionImportar_JSON.triggered.connect(self.ImportarJSON)
 		self.actionExportar_JSON.triggered.connect(self.ExportarJSON)
+
+		self.actionOrganizar_PDFs.triggered.connect(self.Org_PDFs_)
+		self.actionEscanear_PDF.triggered.connect(self.Scan_PDFs_)
 		self.actionEditar_directorios.triggered.connect(self.Editar_Dir)
 
 		self.BotonBuscar.clicked.connect(self.Buscar)
 		self.BotonAgregar.clicked.connect(self.AgregarBoton)
 		self.AbrirPDF.clicked.connect(self.AbrirPDFBoton)
 		self.BotonEditar.clicked.connect(self.EditarBoton)
+		self.BotonEliminar.clicked.connect(self.EliminarAlumno)
+
+		self.CuadroBuscar.returnPressed.connect(self.BotonBuscar.animateClick)
+
+		self.BotonesDes()
+
 
 	#------- Exportar los arlumnos desde la base de datos-------------------------------------------
 
@@ -72,7 +83,31 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
 		return TodosMisAlumnos(L, self.Ruta_PDF, self.Ruta_Base)
 
+	#........ Actualizar completador -----------------------------------------------------------------
 
+	def ActualizarCom(self):
+		self.PalabrasClaves = QCompleter(self.Listas.ClavesBusqueda)
+		self.PalabrasClaves.setCaseSensitivity(QtCore.Qt.CaseInsensitive)
+		self.CuadroBuscar.setCompleter(self.PalabrasClaves)
+
+	#--------Habilitar botones o deshabilitar segun sean necesarios o no -----------------------------
+
+	def BotonesDes(self):
+		self.BotonEditar.setEnabled(False)
+		self.BotonEliminar.setEnabled(False)
+		self.AbrirPDF.setEnabled(False)
+
+	def BotonesOn(self):
+		self.BotonEditar.setEnabled(True)
+		self.BotonEliminar.setEnabled(True)
+
+#		self.Mostrar.itemDoubleClicked.connect(self.BotonEditar.animateClick)
+		self.Mostrar.itemActivated.connect(self.BotonEditar.animateClick)
+
+		if self.PDF_disponible == "Sí":
+			self.AbrirPDF.setEnabled(True)
+		else:
+			self.AbrirPDF.setEnabled(False)
 	#-------- Archivos necesarios --------------------------------------------------------------------
 
 
@@ -188,6 +223,29 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
 		self.MensajeUser(f'Los archivos PDF han sido organizados en {self.Ruta_PDF}/')
 
+	#-.----- Escanear PDFs--------------------------------------------------------------------------
+
+	def Scan_PDFs_(self):
+		self.MensajeUser("Escaneado PDF...")
+		self.Listas.EscanearPDFs()
+
+		if len(self.Listas.ErrorPDFs) == 0:
+			self.MensajeUser("No se encontraron errores en los archivos PDF")
+			return
+		else:
+			self.MensajeUser(f'Se encontraron {len(self.Listas.ErrorPDFs)} errores en los archivos PDF')
+
+		salida_ = ""
+
+		for nombre in self.Listas.ErrorPDFs:
+			fecha = datetime.today().strftime('%Y-%m-%d %H:%M') + ": "
+			salida_ = f'{salida_}{fecha}Error en el archivo del alumno {nombre} en "{self.Listas.ErrorPDFs[nombre][0]}":\n'
+			salida_ = f'{salida_}\tEl {self.Listas.ErrorPDFs[nombre][1]} es incorrecto\n\n'
+
+		salidaf = open("Informe_errores_PDF.txt", "w")
+		print(salida_, file=salidaf)
+		salidaf.close()
+
 	# ------ Refrescar desde base de datos --------------------------------------------------------
 
 	def Importar_(self):
@@ -232,11 +290,11 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 	def keyPressEvent(self,event):
 		IndexTab = self.tabWidget.currentIndex()
 		NameTab	= self.tabWidget.tabText(IndexTab)
-		if event.key() == QtCore.Qt.Key_Return:
-			if NameTab == "Buscar":				# Usar tecla enter para activar la busqueda
-				self.Buscar()					# o la ejecucion de comandos
-			elif NameTab == "Consola":
-				self.EnterConsola()
+
+		if event.key() == QtCore.Qt.Key_P:
+			self.AbrirPDF.animateClick()
+		elif event.key() == QtCore.Qt.Key_A:
+			self.BotonAgregar.animateClick()
 		elif event.modifiers() == QtCore.Qt.ControlModifier:
 			if event.key() == QtCore.Qt.Key_Tab: # Navegar entre pestañas con CTRL + Tab
 				IndexTab += 1
@@ -301,10 +359,13 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 		self.Listas.lista[indice].DiccAlumno()
 		datos = self.Listas.lista[indice].datos # Obtenemos los datos del alumno
 
+		self.PDF_disponible = datos["¿PDF entregado?"]
+
 		for i in datos:							# Imprimimos los datos
 			self.Mostrar.addItem(i + ": " + datos[i]  )
 
 		self.MensajeUser("Datos del alumno:")
+		self.BotonesOn()
 
 	#------ Funcion para agregar alumno --------------------------------------------------------
 
@@ -318,6 +379,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
 	def Agregar_2(self,lista):
 		self.Listas.AddAlumno(lista)
+		self.ActualizarCom()
 
 	# ----- Funcion para boton Abrir PDF -------------------------------------------------------
 
@@ -339,7 +401,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
 		index = self.Mostrar.currentRow()
 		try:
-			datos = datos = self.Listas.lista[self.indice].datos
+			datos = self.Listas.lista[self.indice].datos
 			atri = list(datos.keys())[index]
 		except AttributeError:
 			return
@@ -347,14 +409,34 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 		if atri == "¿PDF entregado?":
 			self.MensajeUser("Error. Elige un atributo editable")
 			return
+		viejo = datos[atri]
 
 		self.V_E = V_Editar()
-		self.V_E.EditarAtributo(datos["Nombre"], atri, self.EditarBoton_2, self.Listas.Data)
+		self.V_E.EditarAtributo(datos["Nombre"], viejo, atri, self.EditarBoton_2, self.Listas.Data)
 		self.V_E.show()
 
 	def EditarBoton_2(self,dato,nuevo):
 		self.Listas.MotorEditar_GUI(self.indice, dato, nuevo)
 		self.Desplegar_alumnos(self.indice)
+		self.ActualizarCom()
+
+	#----- Funcion eliminar alumno --------------------------------------------------------------
+
+	def EliminarAlumno(self):
+
+		nombre = self.Listas.lista[self.indice].nombre
+
+		self.Alerta = V_Alerta()
+		self.Alerta.CambiarMensaje(f'¿Estás seguro de borrar al alumno {nombre}?')
+		self.Alerta.ActFun(self.Eliminar_)
+		self.Alerta.show()
+
+	def Eliminar_(self):
+		self.Listas.RmAlumno(self.indice)
+		self.indice = None
+
+		self.Mostrar.clear()
+		self.BotonesDes()
 
 	#----- Desplegar ventana alerta ---------------------------------------------------------
 
@@ -395,6 +477,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 		if eleccion == "Si":
 			self.Listas.ReescribirBaseDatos(False)
 			self.Listas.Control_version()
+			self.Listas.Cambios_base(cargar = True)
 		else:
 			self.Listas.CambiosSinGuardar = []
 
@@ -419,6 +502,7 @@ class V_Coincidencias(QtWidgets.QDialog, Ui_Ventana_Coincidencias):
 
 		self.Imprimir()
 		self.buttonBox.accepted.connect(self.Aceptar)
+		self.ListaCoincidencias.itemDoubleClicked.connect(self.buttonBox.accepted)
 
 	#----- Funcion para imprimir las coincidencias y que el usuario eliga la requerida ----------------
 
@@ -455,12 +539,12 @@ class V_Editar(QtWidgets.QDialog, Ui_VentanaEditar):
 
 	def Aceptar(self):
 		nuevo = self.EntradaEditar.text().strip()
-		if nuevo == "":
+		if nuevo == "" or nuevo == self.Old:
 			return
 
 		self.F(self.d, nuevo)
 
-	def EditarAtributo(self, nombre ,dato, funcion, op = ""):
+	def EditarAtributo(self, nombre, old, dato, funcion, op = ""):
 
 		''' Importa datos de la clase principal. Admite el nombre del alumno, el dato a editar y
 			la función necesaria para editar en la base de datos: EditarAtributo(nombre ,dato, funcion) '''
@@ -469,6 +553,9 @@ class V_Editar(QtWidgets.QDialog, Ui_VentanaEditar):
 		self.AtributoEditar.setText(dato + ": ")
 		self.F = funcion
 		self.d = dato
+		self.Old = old
+		self.EntradaEditar.setText(self.Old)
+		self.EntradaEditar.selectAll()
 
 		if op == "" or dato in ["Nombre", "Número de registro"]:
 			return
@@ -496,6 +583,11 @@ class V_Alerta(QtWidgets.QDialog, Ui_VentanaAlerta):
 		# Predeterminado: No hay resultados
 
 		self.MensajeNoHay.setText(cadena)
+
+	def ActFun(self, f):
+		self.F = f
+
+		self.buttonBox.accepted.connect(self.F)
 
 #|------------------------------------------------------------------------------------------------------|
 #|------       Clase ventana para agregar                                                  -------------|

@@ -1,0 +1,33 @@
+
+
+* Lista del plantel Calzada, curso Curso para magos del horario 09-13hrs *
+
+
+Nombre          Num. de registro  Carrera      Centro    PDF enviado
+------------  ------------------  -----------  --------  -------------
+Potter Harry            01234567  Ing. Magica  CUVV      *No*
+
+
+* Lista del plantel Calzada, curso curso generico del horario 0-3hrs *
+
+
+Nombre                      Num. de registro    Carrera                Centro    PDF enviado
+--------------------------  ------------------  ---------------------  --------  -------------
+Natski Subari               n/a                 Lic. en CSS            CUVV      *No*
+Riddle Tom Marvolo          4681012             Lic. en artes oscuras  Hogwarts  *No*
+Santiago Garcia Ivan Josue  n/a                 Lic. en artes oscuras  CUCEI     *No*
+
+
+* Lista del plantel Tlajomulco, curso curso generico del horario 0-3hrs *
+
+
+Nombre                             Num. de registro  Carrera                Centro    PDF enviado
+-------------------------------  ------------------  ---------------------  --------  -------------
+Iwatani Naofumi                             1234567  Héroe del Escudo       RM        *No*
+Navarro Serrano Jairo Alejandro             1234567  Lic en Datos Curiosos  CUCEI     *No*
+Ramírez Montes Jhoselin Adrián              0123456  Lic. en CSS            CUCEI     *No*
+Rivera Hernández Pablo Alberto              1234567  Lic en Fisica          CUVV      *No*
+Santiago Garcia Danna Guadalupe             1234567  Lic en Monos Chinos    CUCEI     *No*
+Santiago Garcia Leonardo Daniel             1234567  Lic en Monos Chinos    CUVV      Sí
+
+

@@ -22,21 +22,43 @@ class TodosMisAlumnos:
 		self.lista = lista_
 		self.ruta_pdf = ruta_pdf
 		self.ruta_base_datos = ruta_base_datos
-		self.ruta_historial = f'{os.path.dirname(self.ruta_base_datos)}/.CACHE/historial_cambios.txt'
+		self.ruta_h = f'.CACHE'
+		self.ruta_ = os.path.dirname(self.ruta_base_datos)
+		#self.ruta_historial = f'{os.path.dirname(self.ruta_base_datos)}/.CACHE/historial_cambios.txt'
+		self.Arch_dir_historial()
 
 		self.Control_version()
 		self.EntregarPDF()
 		self.UsedData()
+		self.Cambios_base()
+
+		self.CambiosSinGuardar = []
+
+	#---------------------------------------------------------------------------------------------
+
+	def Arch_dir_historial(self):
+		self.ruta_historial = f'historial_cambios.txt'
+		self.base_status = f'base_estatus.json'
+		self.lineasF_status = f'lineas_estatus.json'
+		aux = "/"
+
+		if self.ruta_ == "":
+			aux = ""
+
+		self.ruta_ = f'{self.ruta_}{aux}'
+		self.ruta_historial = f'{self.ruta_}{self.ruta_h}/{self.ruta_historial}'
+		self.base_status = f'{self.ruta_}{self.ruta_h}/{self.base_status}'
+		self.lineasF_status = f'{self.ruta_}{self.ruta_h}/{self.lineasF_status}'
 
 	#---------------------------------------------------------------------------------------------
 
 	def Control_version(self):
-		versiones_ruta = f'{os.path.dirname(self.ruta_base_datos)}/.CACHE/Historial_versiones'
+		versiones_ruta = f'{self.ruta_}{self.ruta_h}/Historial_versiones'
 		maxi = 50
 
-		if os.path.dirname(self.ruta_base_datos) == "":
-			versiones_ruta = f'.CACHE/Historial_versiones'
-			self.ruta_historial = f'.CACHE/historial_cambios.txt'
+#		if os.path.dirname(self.ruta_base_datos) == "":
+#			versiones_ruta = f'.CACHE/Historial_versiones'
+#			self.ruta_historial = f'.CACHE/historial_cambios.txt'
 
 		os.makedirs(versiones_ruta,exist_ok = True)
 
@@ -74,6 +96,118 @@ class TodosMisAlumnos:
 
 	#---------------------------------------------------------------------------------------------
 
+	def Cambios_base(self, cargar = False):
+
+		arbol = dict()
+
+		self.Grupos_ruta = dict()
+
+		for ruta,direc,arch in os.walk(self.ruta_base_datos):
+			arbol[ruta] = {"directorios":direc, "archivos":arch}
+			if len(arch) != 0:
+				self.Grupos_ruta[ruta] = arch.copy()
+
+		Cambios_lineas = self.Cambios2Files(cargar)
+		para_w = PrepararJSON(arbol, cadena_not = True)
+
+		try:
+			entrada = open(self.base_status, "r")
+			antiguo = entrada.readlines()
+			entrada.close()
+
+			antiguo = Entrada4JSON(antiguo)
+		except FileNotFoundError:
+			cargar = True
+
+		salida = open(self.base_status, "w")
+		print(para_w, file=salida)
+		salida.close()
+		if cargar:
+			return
+
+		Cambios = []
+
+		for ruta in antiguo:
+			for objeto in antiguo[ruta]:
+				try:
+					eli, agr = comparar_C(antiguo[ruta][objeto], arbol[ruta][objeto])
+				except KeyError:
+					continue
+				if len(eli) == 0 and len(agr) == 0:
+					continue
+				Cambios.append({"ruta":ruta, "Obj":objeto, "rm":eli.copy(), "add":agr.copy()})
+
+		fecha = datetime.today().strftime('%Y-%m-%d %H:%M')
+		Cam_ = [f'{fecha}:']
+		for i in Cambios:
+			Cam_.append(f'\tEn la ruta {i["ruta"]}/, en cuanto a {i["Obj"]}:')
+
+			if len(i["add"]) != 0:
+				Cam_.append(f'\t\tSe agregó:')
+
+				for j in i["add"]:
+					Cam_.append(f'\t\t\t{j}')
+
+			if len(i["rm"]) != 0:
+				Cam_.append(f'\t\tSe eliminó:')
+
+				for j in i["rm"]:
+					Cam_.append(f'\t\t\t{j}')
+
+		Cam_ = Cam_ + Cambios_lineas
+
+		if len(Cam_) != 1:
+			Agregar2TXT(self.ruta_historial, Cam_)
+
+	#---------------------------------------------------------------------------------------------
+
+	def Cambios2Files(self,cargar = False):
+
+		Lineas = dict()
+
+		for ruta in self.Grupos_ruta:
+			for grupo in self.Grupos_ruta[ruta]:
+				Lineas[f'{ruta}/{grupo}'] = Extraer2TXT(f'{ruta}/{grupo}')
+
+		para_w = PrepararJSON(Lineas, cadena_not = True)
+
+		try:
+			Lineas_old = Extraer2TXT(self.lineasF_status)
+			Lineas_old = Entrada4JSON(Lineas_old)
+		except FileNotFoundError:
+			cargar = True
+
+		salida = open(self.lineasF_status, "w")
+		print(para_w, file=salida)
+		salida.close()
+
+		if cargar:
+			return []
+
+		inter_rutas = Inter_C(Lineas.keys(), Lineas_old.keys())
+
+		salida = []
+
+		for r in inter_rutas:
+			eli, agr = comparar_C(Lineas_old[r], Lineas[r])
+			if len(eli + agr) == 0:
+				continue
+
+			salida.append(f'\tSe realizaron cambios en el archivo {r}:')
+
+			if len(eli) != 0:
+				salida.append(f'\t\tSe eliminaron las lineas:')
+				for i in eli:
+					salida.append(f'\t\t\tLinea {Lineas_old[r].index(i) + 1}: {i}')
+
+			if len(agr) != 0:
+				salida.append(f'\t\tSe agregaron las lineas:')
+				for i in agr:
+					salida.append(f'\t\t\tComo linea {Lineas[r].index(i) + 1}: {i}')
+
+		return salida
+	#---------------------------------------------------------------------------------------------
+
 	def UsedData(self):
 
 		if hasattr(self, "Data"):
@@ -88,6 +222,7 @@ class TodosMisAlumnos:
 			self.Data["Carrera"] = []
 			self.Data["Centro Universitario"] = []
 
+		self.ClavesBusqueda = []
 
 		for alumno in self.lista:
 			if alumno.plantel not in self.Data["Plantel"]:
@@ -101,6 +236,11 @@ class TodosMisAlumnos:
 				self.Data["Carrera"].append(alumno.carrera)
 			if alumno.CU not in self.Data["Centro Universitario"]:
 				self.Data["Centro Universitario"].append(alumno.CU)
+
+			claves = procesar(alumno.nombre).lower().split(" ")
+			for clave in claves:
+				if clave not in self.ClavesBusqueda:
+					self.ClavesBusqueda.append(clave)
 
 		for i in self.Data:
 			self.Data[i].sort()
@@ -117,16 +257,21 @@ class TodosMisAlumnos:
 			self.CambiosSinGuardar = []
 			self.CambiosSinGuardar.append(cadena)
 
+	def Eventos_control(self,cadena):
+
+		''' Hace seguimiento de eventos relevantes para la gestion '''
+		Agregar2TXT(self.ruta_historial, [cadena])
+
+
 	#---------------------------------------------------------------------------------------------
 
 	def add_cHistorial(self):
 
 		''' Al importar los cambios a la base de datos, guarda los cambios en el archivo historial y
 			vacía el seguimiento de cambios sin guardar '''
-
-		Agregar2TXT(self.ruta_historial, self.CambiosSinGuardar)
-
-		self.CambiosSinGuardar = []
+		if self.CambiosSinGuardar != []:
+			Agregar2TXT(self.ruta_historial, self.CambiosSinGuardar)
+			self.CambiosSinGuardar = []
 
 	#---------------------------------------------------------------------------------------------
 
@@ -146,9 +291,29 @@ class TodosMisAlumnos:
 
 		fecha = datetime.today().strftime('%Y-%m-%d %H:%M')
 
-		cambio = f'{fecha}:\n\t Se agregó el alumno {lista[0]}:\n\t\t Número de registro: {lista[1]}, Carrera: {lista[2]}, Centro universitario: {lista[3]}, Curso: {lista[4]}, Plantel: {lista[5]}, Horario: {lista[6]}'
+		cambio = f'{fecha}:\n\tSe agregó el alumno {lista[0]}:\n\t\tNúmero de registro: {lista[1]}, Carrera: {lista[2]}, Centro universitario: {lista[3]}, Curso: {lista[4]}, Plantel: {lista[5]}, Horario: {lista[6]}'
 
 		self.lista.append(Alumno(*lista))
+		self.Cambios_realizados(cambio)
+		self.UsedData()
+
+	#-------------------------------------------------------------------------------------------------
+
+	def RmAlumno(self,indice):
+
+		self.lista[indice].DiccAlumno()
+		d = self.lista[indice].datos
+
+		fecha = datetime.today().strftime('%Y-%m-%d %H:%M')
+		cambio= f'{fecha}:\n\tSe eliminó al alumno {d["Nombre"]}:\n\t\t'
+		for i in d:
+			if i == "Nombre" or i == "¿PDF entregado?":
+				continue
+
+			aux = f'{i}: {d[i]}, '
+			cambio = cambio + aux
+
+		self.lista.pop(indice)
 		self.Cambios_realizados(cambio)
 		self.UsedData()
 
@@ -187,6 +352,10 @@ class TodosMisAlumnos:
 				if Consola:
 					print("\nArchivos desplazados:")
 					print(f'{PDF} --> {nueva_ruta}/\n')
+				else:
+					fecha = datetime.today().strftime('%Y-%m-%d %H:%M')
+					mensaje = f'{fecha}:\n\tArchivos desplazados:\n\t\t{PDF} --> {nueva_ruta}/'
+					self.Eventos_control(mensaje)
 
 				try:
 					os.rename(ruta1, f'{self.ruta_pdf}/{nueva_ruta}/{PDF}')
@@ -198,6 +367,24 @@ class TodosMisAlumnos:
 
 
 		self.EntregarPDF()
+
+	#--------------------------------------------------------------------------------------------
+
+	def EscanearPDFs(self):
+
+		Error = dict()
+
+		for alumno in self.lista:
+			alumno.ConfirmarPDF()
+			if hasattr(alumno, "CoinPorcent"):
+				if alumno.CoinPorcent < 50.0:
+					Error[alumno.nombre] = (alumno.RutaPDF, "Archivo PDF")
+				elif alumno.CoinPorcent == 101:
+					print(f'El archivo {alumno.RutaPDF} no se puede leer')
+				elif alumno.CoinNum == 0.0:
+					Error[alumno.nombre] = (alumno.RutaPDF, "Número de registro")
+
+		self.ErrorPDFs = Error
 
 	#--------------------------------------------------------------------------------------------
 
@@ -265,6 +452,8 @@ class TodosMisAlumnos:
 
 				entregado[PDF.replace(".pdf","")] = rutaPDF
 
+		for alumno in self.lista:
+			alumno.ReiniciarPDFs()
 
 		for alumno in self.lista:
 			nombre = alumno.comparar_nombre
@@ -310,6 +499,7 @@ class TodosMisAlumnos:
 			salida.close()
 
 		self.add_cHistorial()
+		self.Cambios_base(cargar = True)
 
 		if Consola:
 			print("\n\t*** La base de datos de alumnos, ha sido actualizada ***")
@@ -577,7 +767,7 @@ class TodosMisAlumnos:
 				todos["Planteles"].append(i.datos["Plantel"])
 			if i.datos["Curso"] not in todos["Cursos"]:
 				todos["Cursos"].append(i.datos["Curso"])
-			if i.datos["Número de registro"] != "No data":
+			if i.datos["Número de registro"] not in ["n/a", "No data"]:
 				total_nr += 1
 
 			grupo = i.datos["Plantel"] + i.datos["Curso"] + i.datos["Horario"]
@@ -617,9 +807,6 @@ class TodosMisAlumnos:
 		lineas = lineas.replace("\t","")
 		lineas = lineas.replace("\n","")
 		entrada.close()
-
-
-		aux = json.loads(lineas)
 
 		datos = json.loads(lineas)
 
@@ -664,8 +851,19 @@ class Alumno:
 		self.plantel = plantel
 		self.horario = horario
 		self.NR_entregado = "No data"
-		self.comparar_nombre = quitaracentos(self.nombre)
+		self.GenerarComparar()
 		self.RutaPDF = "Sin ruta"
+
+	#--------------------------------------------------------------------------------------------
+
+	def ReiniciarPDFs(self):
+		self.NR_entregado = "No data"
+		self.RutaPDF = "Sin ruta"
+
+	#--------------------------------------------------------------------------------------------
+
+	def GenerarComparar(self):
+		self.comparar_nombre = quitaracentos(self.nombre)
 
 	#--------------------------------------------------------------------------------------------
 
@@ -682,8 +880,9 @@ class Alumno:
 			self.CU = nuevo
 		elif dato == "Nombre":
 			self.nombre = nuevo
+			self.GenerarComparar()
 		elif dato == "Curso":
-			self.curso == nuevo
+			self.curso = nuevo
 		elif dato == "Plantel":
 			self.plantel = nuevo
 		elif dato == "Horario":
@@ -694,6 +893,24 @@ class Alumno:
 		self.DiccAlumno()
 
 		return 1
+	#--------------------------------------------------------------------------------------------
+
+	def ConfirmarPDF(self):
+		if self.RutaPDF == "Sin ruta":
+			return
+
+		cadena = PDF2Cadena(self.RutaPDF)
+
+		if cadena == "":
+			self.CoinPorcent = 101
+		else:
+			self.CoinPorcent = BuscarEnCadena(self.comparar_nombre, cadena)
+
+		if self.nRegistro != "n/a":
+			self.CoinNum = BuscarEnCadena(self.nRegistro, cadena)
+		else:
+			self.CoinNum = -1
+
 	#--------------------------------------------------------------------------------------------
 
 	def DiccAlumno(self):
