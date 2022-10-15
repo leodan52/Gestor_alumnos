@@ -1,0 +1,64 @@
+{
+	"Cursos":
+	{
+		"directorios":
+		[
+			"Calzada",
+			"Tlajomulco"
+		],
+		"archivos":
+		[
+		]
+	},
+	"Cursos/Calzada":
+	{
+		"directorios":
+		[
+			"curso generico",
+			"Curso para magos"
+		],
+		"archivos":
+		[
+		]
+	},
+	"Cursos/Calzada/curso generico":
+	{
+		"directorios":
+		[
+		],
+		"archivos":
+		[
+			"0-3hrs.txt"
+		]
+	},
+	"Cursos/Calzada/Curso para magos":
+	{
+		"directorios":
+		[
+		],
+		"archivos":
+		[
+			"09-13hrs.txt"
+		]
+	},
+	"Cursos/Tlajomulco":
+	{
+		"directorios":
+		[
+			"curso generico"
+		],
+		"archivos":
+		[
+		]
+	},
+	"Cursos/Tlajomulco/curso generico":
+	{
+		"directorios":
+		[
+		],
+		"archivos":
+		[
+			"0-3hrs.txt"
+		]
+	}
+}

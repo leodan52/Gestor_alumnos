@@ -1,0 +1,21 @@
+{
+	"Cursos/Calzada/curso generico/0-3hrs.txt":
+	[
+		"Natski Subari\t&\tn/a\t&\tLic. en CSS\t&\tCUVV",
+		"Riddle Tom Marvolo\t&\t4681012\t&\tLic. en artes oscuras\t&\tHogwarts",
+		"Santiago Garcia Ivan Josue\t&\tn/a\t&\tLic. en artes oscuras\t&\tCUCEI"
+	],
+	"Cursos/Calzada/Curso para magos/09-13hrs.txt":
+	[
+		"Potter Harry\t&\t01234567\t&\tIng. Magica\t&\tCUVV"
+	],
+	"Cursos/Tlajomulco/curso generico/0-3hrs.txt":
+	[
+		"Iwatani Naofumi\t&\t1234567\t&\tHéroe del Escudo\t&\tRM",
+		"Navarro Serrano Jairo Alejandro\t&\t1234567\t&\tLic en Datos Curiosos\t&\tCUCEI",
+		"Ramírez Montes Jhoselin Adrián\t&\t0123456\t&\tLic. en CSS\t&\tCUCEI",
+		"Rivera Hernández Pablo Alberto\t&\t1234567\t&\tLic en Fisica\t&\tCUVV",
+		"Santiago Garcia Danna Guadalupe\t&\t1234567\t&\tLic en Monos Chinos\t&\tCUCEI",
+		"Santiago Garcia Leonardo Daniel\t&\t208008442\t&\tLic en Monos Chinos\t&\tCUVV"
+	]
+}
