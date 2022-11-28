@@ -1,5 +1,5 @@
 Iwatani Naofumi	&	1234567	&	Héroe del Escudo	&	RM
-Navarro Serrano Jairo Alejandro	&	1234567	&	Lic en Datos Curiosos	&	CUCEI
+Navarro Serrano Jairo Alejandro	&	0123456	&	Lic en Datos Curiosos	&	CUCEI
 Ramírez Montes Jhoselin Adrián	&	0123456	&	Lic. en CSS	&	CUCEI
 Rivera Hernández Pablo Alberto	&	1234567	&	Lic en Fisica	&	CUVV
 Santiago Garcia Danna Guadalupe	&	1234567	&	Lic en Monos Chinos	&	CUCEI

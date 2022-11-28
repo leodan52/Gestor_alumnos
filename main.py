@@ -37,6 +37,12 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 #		self.Ruta_main = os.path.dirname(os.path.abspath(__file__))
 		self.Ruta_dir = ".rutas.json"
 		self.Ruta_Historial = ".historial.json"
+		self.Ruta_Base = "Ruta de la base"
+		self.Ruta_PDF = "Ruta de los PDFs"
+		self.PalabrasClaves = "Coincidencias de búsqueda para cuadro"
+		self.indice = None
+		self.PDF_disponible = "No Data"
+
 		self.Necesario_files()
 		self.Set_RutasBases()
 
@@ -252,8 +258,17 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
 		''' Extrae la información de la base de datos '''
 
-		self.Listas = self.Extraer_()
-		self.MensajeUser(f'La base de datos {self.Ruta_Base}/ ha sido cargada')
+		if self.Listas.CambiosSinGuardar != []:
+			self.ventana_alerta = V_Alerta()
+			self.ventana_alerta.ActFun(self.Actualizar_)
+			self.ventana_alerta.CambiarMensaje("Hay cambios sin guardar, ¿Deseas continuar y perderlos?")
+			self.ventana_alerta.show()
+		else:
+			self.Actualizar_()
+
+	def Actualizar_(self):
+			self.Listas = self.Extraer_()
+			self.MensajeUser(f'La base de datos {self.Ruta_Base}/ ha sido cargada')
 
 	# ------ Reescribir base de datos ----------------------------------------------------------------
 

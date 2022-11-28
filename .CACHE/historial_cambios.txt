@@ -106,3 +106,6 @@
 2022-10-15 09:31:
 	Cambio en Santiago Garcia Leonardo Daniel del plantel Tlajomulco, curso curso generico, horario 0-3hrs:
 		 Cambió Número de registro: 0123456 --> 208008442
+2022-10-19 08:58:
+	Cambio en Navarro Serrano Jairo Alejandro del plantel Tlajomulco, curso curso generico, horario 0-3hrs:
+		 Cambió Número de registro: 1234567 --> 0123456

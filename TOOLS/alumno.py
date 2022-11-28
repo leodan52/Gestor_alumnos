@@ -854,6 +854,26 @@ class Alumno:
 		self.GenerarComparar()
 		self.RutaPDF = "Sin ruta"
 
+		self.ValoresVacios()
+
+	#--------------------------------------------------------------------------------------------
+
+	def ValoresVacios(self):
+
+		aux = [self.nRegistro, self.carrera, self.CU]
+
+		while "" in aux:
+			indice = aux.index("")
+			if indice == 0:
+				self.nRegistro = "n/a"
+			elif indice == 1:
+				self.carrera = "n/a"
+			else:
+				self.CU = "n/a"
+
+			aux = [self.nRegistro, self.carrera, self.CU]
+
+
 	#--------------------------------------------------------------------------------------------
 
 	def ReiniciarPDFs(self):
