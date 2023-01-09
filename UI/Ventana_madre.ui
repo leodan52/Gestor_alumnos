@@ -190,6 +190,7 @@
     <addaction name="actionOrganizar_PDFs"/>
     <addaction name="actionEscanear_PDF"/>
     <addaction name="actionEditar_directorios"/>
+    <addaction name="actionConfirmar_admision"/>
    </widget>
    <addaction name="menuasdasd"/>
    <addaction name="menuCursos"/>
@@ -232,6 +233,16 @@
   <action name="actionEscanear_PDF">
    <property name="text">
     <string>Escanear PDFs</string>
+   </property>
+  </action>
+  <action name="actionConfrimar_admisi_n">
+   <property name="text">
+    <string>Confrimar admisión</string>
+   </property>
+  </action>
+  <action name="actionConfirmar_admision">
+   <property name="text">
+    <string>Confirmar admisión</string>
    </property>
   </action>
  </widget>

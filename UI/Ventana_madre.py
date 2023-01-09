@@ -114,6 +114,10 @@ class Ui_MainWindow(object):
         self.actionEditar_directorios.setObjectName("actionEditar_directorios")
         self.actionEscanear_PDF = QtWidgets.QAction(MainWindow)
         self.actionEscanear_PDF.setObjectName("actionEscanear_PDF")
+        self.actionConfrimar_admisi_n = QtWidgets.QAction(MainWindow)
+        self.actionConfrimar_admisi_n.setObjectName("actionConfrimar_admisi_n")
+        self.actionConfirmar_admision = QtWidgets.QAction(MainWindow)
+        self.actionConfirmar_admision.setObjectName("actionConfirmar_admision")
         self.menuJSON.addAction(self.actionImportar_JSON)
         self.menuJSON.addAction(self.actionExportar_JSON)
         self.menuBase_de_datos.addAction(self.actionImportar)
@@ -124,6 +128,7 @@ class Ui_MainWindow(object):
         self.menuCursos.addAction(self.actionOrganizar_PDFs)
         self.menuCursos.addAction(self.actionEscanear_PDF)
         self.menuCursos.addAction(self.actionEditar_directorios)
+        self.menuCursos.addAction(self.actionConfirmar_admision)
         self.menuBar.addAction(self.menuasdasd.menuAction())
         self.menuBar.addAction(self.menuCursos.menuAction())
 
@@ -154,6 +159,8 @@ class Ui_MainWindow(object):
         self.actionExportar_JSON.setText(_translate("MainWindow", "Exportar JSON"))
         self.actionEditar_directorios.setText(_translate("MainWindow", "Editar directorios"))
         self.actionEscanear_PDF.setText(_translate("MainWindow", "Escanear PDFs"))
+        self.actionConfrimar_admisi_n.setText(_translate("MainWindow", "Confrimar admisión"))
+        self.actionConfirmar_admision.setText(_translate("MainWindow", "Confirmar admisión"))
 
 
 if __name__ == "__main__":
