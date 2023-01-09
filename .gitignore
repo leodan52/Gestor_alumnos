@@ -2,6 +2,6 @@
 *.txt
 
 .CACHE/
-__pychache__/
+**/__pycache__
 Cursos/
 Cursos_pdf/
