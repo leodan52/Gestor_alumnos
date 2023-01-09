@@ -61,6 +61,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 		self.actionOrganizar_PDFs.triggered.connect(self.Org_PDFs_)
 		self.actionEscanear_PDF.triggered.connect(self.Scan_PDFs_)
 		self.actionEditar_directorios.triggered.connect(self.Editar_Dir)
+		self.actionConfirmar_admision.triggered.connect(self.BuscarAdmitidos)
 
 		self.BotonBuscar.clicked.connect(self.Buscar)
 		self.BotonAgregar.clicked.connect(self.AgregarBoton)
@@ -300,6 +301,25 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 		self.VentanaEditar_dir.EditarDirectorios(self.Ruta_dir, self.Set_RutasBases, self.MensajeUser)
 		self.VentanaEditar_dir.show()
 
+	# -----------Cargar PDF con dictamen y buscar admitidos ----------------------------------------
+
+	def BuscarAdmitidos(self):
+
+		''' Cuando el dictamen UDG de admitidos sea publicado, se puede usar el PDF para buscar
+			si los alumnos del curso fueron admitidos '''
+		try:
+			ruta = extraer_historial(self.Ruta_Historial)["Dictamen"]
+		except KeyError:
+			ruta = "./"
+
+		archivo = QFileDialog.getOpenFileName(self,"Elige el PDF que contiene el dictamen", ruta, "Archivo PDF (*.pdf)")[0]
+
+		self.Listas.LeerDictamen(archivo)
+		self.MensajeUser(f'Un total de {self.Listas.num_Admitidos} fueron admitidos.')
+
+		ruta = os.path.dirname(archivo)
+		r_historial("Dictamen", ruta, self.Ruta_Historial)
+
 	# ------- Filtro de señales de teclado -----------------------------------------------------------
 
 	def keyPressEvent(self,event):
@@ -421,7 +441,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 		except AttributeError:
 			return
 
-		if atri == "¿PDF entregado?":
+		if atri in ["¿PDF entregado?", "¿Admitido?"]:
 			self.MensajeUser("Error. Elige un atributo editable")
 			return
 		viejo = datos[atri]
