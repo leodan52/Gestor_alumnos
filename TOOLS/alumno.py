@@ -402,16 +402,23 @@ class TodosMisAlumnos:
 			if Salon_actual not in Salones:
 				Salones[Salon_actual] = []
 
-			datos_alumno = [alumno.nombre,alumno.nRegistro,alumno.carrera,alumno.CU,alumno.NR_entregado]
+			datos_alumno = [alumno.nombre,alumno.nRegistro,alumno.carrera,alumno.CU,alumno.NR_entregado, alumno.admitido]
 
 			Salones[Salon_actual].append(datos_alumno)
 
-		titulos = ["Nombre","Num. de registro", "Carrera", "Centro", "PDF enviado"]
+		titulos = ["Nombre","Num. de registro", "Carrera", "Centro", "PDF enviado", "¿Admitido?"]
 
 		salida = open(archivo, "w")
 
 		for salon in Salones:
 			print(salon, file=salida)
+
+			check_dictamen = ChecarDictamen(Salones[salon])
+
+			if not check_dictamen and titulos[-1] == "¿Admitido?":
+				titulos.pop(-1)
+			elif titulos[-1] != "¿Admitido?":
+				titulos.append("¿Admitido?")
 
 			print(tabla(Salones[salon], headers=titulos), file=salida)
 
@@ -825,6 +832,23 @@ class TodosMisAlumnos:
 			self.lista.append(Alumno(n,nr,c,cu,curso,plantel,horario))
 
 
+	#-------- Leer dictamen para conocer admitidos -----------------------------------------
+
+	def LeerDictamen(self, archivo):
+
+		cadena = PDF2Cadena(archivo)
+
+		print(f'Mensaje de la clase "{type(self).__name__}": El archivo dictamen tiene una longitud de {len(cadena)}')
+
+		self.num_Admitidos = 0
+
+		for alumno in self.lista:
+			alumno.ConfirmarAdmision(cadena)
+
+			if alumno.admitido == "*Sí*":
+				self.num_Admitidos += 1
+
+
 
 #--------------------------------------------------------------------------------------------
 #--------------------------------------------------------------------------------------------
@@ -853,6 +877,7 @@ class Alumno:
 		self.NR_entregado = "No data"
 		self.GenerarComparar()
 		self.RutaPDF = "Sin ruta"
+		self.admitido = "No data"
 
 		self.ValoresVacios()
 
@@ -933,6 +958,19 @@ class Alumno:
 
 	#--------------------------------------------------------------------------------------------
 
+	def ConfirmarAdmision(self, dictamen):
+		if self.nRegistro == "n/a":
+			return
+
+		porc_coicidencia = BuscarEnCadena(self.nRegistro, dictamen)
+
+		if porc_coicidencia == 100:
+			self.admitido = "*Sí*"
+		else:
+			self.admitido = " No"
+
+	#--------------------------------------------------------------------------------------------
+
 	def DiccAlumno(self):
 
 		''' Genera diccionario que contiene la información del alumno '''
@@ -940,7 +978,7 @@ class Alumno:
 		self.datos = ({ "Nombre" : self.nombre, "Número de registro" : self.nRegistro,
 						"Carrera" : self.carrera, "Centro Universitario" : self.CU,
 						"Curso" : self.curso, "Plantel" : self.plantel, "Horario" : self.horario,
-						"¿PDF entregado?" : self.NR_entregado})
+						"¿PDF entregado?" : self.NR_entregado, "¿Admitido?" : self.admitido})
 
 	#-------------------------------------------------------------------------------------------
 
@@ -950,4 +988,5 @@ class Alumno:
 
 		self.datos = ({"Nombre" : self.nombre, "Número de registro" : self.nRegistro,
 						"Carrera" : self.carrera, "Centro Universitario" : self.CU,
-						"Curso" : self.curso, "Plantel" : self.plantel, "Horario" : self.horario})
+						"Curso" : self.curso, "Plantel" : self.plantel, "Horario" : self.horario,
+						 "¿Admitido?" : self.admitido})
