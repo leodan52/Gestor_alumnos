@@ -1,4 +1,0 @@
-2022-10-15 09:32: : Error en el archivo del alumno Navarro Serrano Jairo Alejandro en "Cursos_pdf/Tlajomulco_curso generico_0-3hrs/Navarro Serrano Jairo Alejandro.pdf":
-	El Archivo PDF es incorrecto
-
-
