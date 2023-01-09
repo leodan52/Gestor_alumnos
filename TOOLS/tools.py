@@ -429,6 +429,18 @@ def ExtraerTextPDF(ruta):
 
 	return text
 
+def ChecarDictamen(lista):
+
+	check = []
+
+	for i in lista:
+		check.append(i[-1] != "No data")
+
+	if not any(check):
+		for i in lista:
+			i.pop(-1)
+
+	return any(check)
 
 if __name__ == "__main__":
 	main()
