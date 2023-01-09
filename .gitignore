@@ -1,0 +1,7 @@
+*.json
+*.txt
+
+.CACHE/
+__pychache__/
+Cursos/
+Cursos_pdf/
