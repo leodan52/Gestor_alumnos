@@ -1,7 +1,7 @@
 # Clases para alumno
 
 from TOOLS.tools import *
-import json
+import json, csv
 from tabulate import tabulate as tabla
 import TOOLS.busqueda as bq
 from shutil import rmtree
@@ -111,17 +111,16 @@ class TodosMisAlumnos:
 		para_w = PrepararJSON(arbol, cadena_not = True)
 
 		try:
-			entrada = open(self.base_status, "r")
-			antiguo = entrada.readlines()
-			entrada.close()
-
-			antiguo = Entrada4JSON(antiguo)
+			with open(self.base_status, "r") as entrada:
+				antiguo = entrada.readlines()
 		except FileNotFoundError:
 			cargar = True
+		else:
+			antiguo = Entrada4JSON(antiguo)
 
-		salida = open(self.base_status, "w")
-		print(para_w, file=salida)
-		salida.close()
+		with open(self.base_status, "w") as salida:
+			print(para_w, file=salida)
+
 		if cargar:
 			return
 
@@ -177,9 +176,8 @@ class TodosMisAlumnos:
 		except FileNotFoundError:
 			cargar = True
 
-		salida = open(self.lineasF_status, "w")
-		print(para_w, file=salida)
-		salida.close()
+		with open(self.lineasF_status, "w") as salida:
+			print(para_w, file=salida)
 
 		if cargar:
 			return []
@@ -408,24 +406,23 @@ class TodosMisAlumnos:
 
 		titulos = ["Nombre","Num. de registro", "Carrera", "Centro", "PDF enviado", "¿Admitido?"]
 
-		salida = open(archivo, "w")
+		with open(archivo, "w") as salida:
 
-		for salon in Salones:
-			print(salon, file=salida)
+			for salon in Salones:
+				print(salon, file=salida)
 
-			check_dictamen = ChecarDictamen(Salones[salon])
+				check_dictamen = ChecarDictamen(Salones[salon])
 
-			if not check_dictamen and titulos[-1] == "¿Admitido?":
-				titulos.pop(-1)
-			elif titulos[-1] != "¿Admitido?":
-				titulos.append("¿Admitido?")
+				if not check_dictamen and titulos[-1] == "¿Admitido?":
+					titulos.pop(-1)
+				elif titulos[-1] != "¿Admitido?":
+					titulos.append("¿Admitido?")
 
-			print(tabla(Salones[salon], headers=titulos), file=salida)
+				print(tabla(Salones[salon], headers=titulos), file=salida)
 
 
-		print("\n", file=salida)
+			print("\n", file=salida)
 
-		salida.close()
 	#--------------------------------------------------------------------------------------------
 
 	def EntregarPDF(self):
@@ -498,12 +495,9 @@ class TodosMisAlumnos:
 		for salon in Salones:
 			nombres_ordenados = sorted(Salones[salon])
 
-			salida = open(salon,"w")
-
-			for nombre in nombres_ordenados:
-				print("\t&\t".join(Salones[salon][nombre]), file=salida )
-
-			salida.close()
+			with open(salon,"w") as salida:
+				for nombre in nombres_ordenados:
+					print("\t&\t".join(Salones[salon][nombre]), file=salida )
 
 		self.add_cHistorial()
 		self.Cambios_base(cargar = True)
@@ -795,9 +789,8 @@ class TodosMisAlumnos:
 		cadena = PrepararJSON(cadena)
 
 		if salida_file:
-			salida = open(archivo, "w")
-			print(cadena, file=salida)
-			salida.close()
+			with open(archivo, "w") as salida:
+				print(cadena, file=salida)
 		else:
 			return todos
 
@@ -808,12 +801,11 @@ class TodosMisAlumnos:
 		''' Importa los datos de los alumnos contenidos en un JSON a las listas. Se debe actualizar
 			la base de datos principal posteriormente '''
 
-		entrada = open(archivo, "r")
-		lineas = entrada.readlines()
-		lineas = "".join(lineas)
-		lineas = lineas.replace("\t","")
-		lineas = lineas.replace("\n","")
-		entrada.close()
+		with open(archivo, "r") as entrada:
+			lineas = entrada.readlines()
+			lineas = "".join(lineas)
+			lineas = lineas.replace("\t","")
+			lineas = lineas.replace("\n","")
 
 		datos = json.loads(lineas)
 
@@ -830,6 +822,19 @@ class TodosMisAlumnos:
 			curso,plantel,horario = alumno["Curso"],alumno["Plantel"],alumno["Horario"]
 
 			self.lista.append(Alumno(n,nr,c,cu,curso,plantel,horario))
+
+	#------------- Importar CSV ---------------------------------------------------------------
+
+
+	def ImportarCSV(self, archivo, datos_curso):
+
+		with open(archivo, newline="") as entrada:
+			lector = csv.reader(entrada)
+
+			for row in lector:
+				newRow = row + datos_curso
+
+				self.lista.append(Alumno(*newRow))
 
 
 	#-------- Leer dictamen para conocer admitidos -----------------------------------------
@@ -979,6 +984,9 @@ class Alumno:
 						"Carrera" : self.carrera, "Centro Universitario" : self.CU,
 						"Curso" : self.curso, "Plantel" : self.plantel, "Horario" : self.horario,
 						"¿PDF entregado?" : self.NR_entregado, "¿Admitido?" : self.admitido})
+
+		if self.admitido == "No data":
+			self.datos.pop("¿Admitido?")
 
 	#-------------------------------------------------------------------------------------------
 
