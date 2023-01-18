@@ -47,6 +47,8 @@ def Image2texto(ruta):
 	if text == "":
 		print(f'\tFalló escaneo en "{ruta}"')
 
+	Im.close() # Veamos como funciona
+
 	return text
 
 
@@ -77,23 +79,21 @@ def extraer(ruta):
 				ruta3 = ruta2 + "/" + Horario
 				horario = Horario.replace(".txt", "")
 
-				Alumnos = open(ruta3,"r")
+				with open(ruta3,"r") as Alumnos:
 
-				for Alumno in Alumnos:
-					Alumno = Alumno.strip()
-					#print(Alumno)
-					try:
-						nombre,numRegistro,carrera,CU = Alumno.split("&")
-					except ValueError:
-						mensaje = f'En {Plantel}/{Curso}/{Horario}. La linea debe tener 4 datos separados por &'
-						Errores_Escritura(Alumno, mensaje)
-						continue
-					nombre,numRegistro,carrera,CU = nombre.strip(), \
-					numRegistro.strip(),carrera.strip(),CU.strip()
+					for Alumno in Alumnos:
+						Alumno = Alumno.strip()
+						#print(Alumno)
+						try:
+							nombre,numRegistro,carrera,CU = Alumno.split("&")
+						except ValueError:
+							mensaje = f'En {Plantel}/{Curso}/{Horario}. La linea debe tener 4 datos separados por &'
+							Errores_Escritura(Alumno, mensaje)
+							continue
+						nombre,numRegistro,carrera,CU = nombre.strip(), \
+						numRegistro.strip(),carrera.strip(),CU.strip()
 
-					lista.append((nombre,numRegistro,carrera,CU,Curso,Plantel,horario))
-
-				Alumnos.close()
+						lista.append((nombre,numRegistro,carrera,CU,Curso,Plantel,horario))
 
 	return lista
 
@@ -168,23 +168,21 @@ def Entrada4JSON(lista):
 
 def Agregar2TXT(ruta,lista):
 	try:
-		entrada = open(ruta, "r")
-		lineas = entrada.readlines()
-		entrada.close()
+		with open(ruta, "r") as entrada:
+			lineas = entrada.readlines()
 	except FileNotFoundError:
 		lineas = []
 
-	salida = open(ruta, "w")
+	with open(ruta, "w") as salida:
 
-	for i in lineas:
-		if i.strip() == "":
-			continue
-		print(i.rstrip(), file=salida)
+		for i in lineas:
+			if i.strip() == "":
+				continue
+			print(i.rstrip(), file=salida)
 
-	for j in lista:
-		print(j, file=salida)
+		for j in lista:
+			print(j, file=salida)
 
-	salida.close()
 
 
 #--------------------------------------------------------------------------------------------
@@ -242,15 +240,12 @@ def Abrete(ruta):
 
 def extraer_historial(ruta_historial):
 	try:
-		entrada = open(ruta_historial, "r")
-		lineas = entrada.readlines()
-		entrada.close()
+		with open(ruta_historial, "r") as entrada:
+			lineas = entrada.readlines()
 	except FileNotFoundError:
-		salida = open(ruta_historial, "w")
-		print("{}",file=salida)
-		salida.close()
+		with  open(ruta_historial, "w") as salida:
+			print("{}",file=salida)
 		lineas = "{}"
-
 	dcc = "".join(lineas)
 
 	return json.loads(dcc)
@@ -259,10 +254,9 @@ def extraer_historial(ruta_historial):
 
 def Existe_con(ruta,dicc):
 	try:
-		entrada = open(ruta, "r")
-		lineas = entrada.readlines()
-		lineas = "".join(lineas)
-		entrada.close()
+		with open(ruta, "r") as entrada:
+			lineas = entrada.readlines()
+			lineas = "".join(lineas)
 	except FileNotFoundError:
 		lineas = "{}"
 
@@ -280,9 +274,8 @@ def Existe_con(ruta,dicc):
 	if aux != 0:
 		dicc_in = json.dumps(dicc_in)
 
-		salida = open(ruta, "w")
-		print(dicc_in,file=salida)
-		salida.close()
+		with open(ruta, "w") as salida:
+			print(dicc_in,file=salida)
 
 #--------------------------------------------------------------------------------------------
 
@@ -291,11 +284,9 @@ def r_historial(dic, nuevo, ruta):
 
 	aux[dic] = nuevo
 	aux = json.dumps(aux)
-	salida = open(ruta, "w")
 
-	print(aux, file=salida)
-
-	salida.close()
+	with open(ruta, "w") as salida:
+		print(aux, file=salida)
 
 #------------------------------------------------------------------------------------------------------------
 
@@ -348,13 +339,12 @@ def Inter_C(C1,C2):
 
 def Extraer2TXT(ruta):
 	Lista = []
-	salida = open(ruta, "r")
-	for i in salida:
-		i = i.strip()
-		if i == "":
-			continue
-		Lista.append(i)
-	salida.close()
+	with open(ruta, "r") as salida:
+		for i in salida:
+			i = i.strip()
+			if i == "":
+				continue
+			Lista.append(i)
 	return Lista
 
 
