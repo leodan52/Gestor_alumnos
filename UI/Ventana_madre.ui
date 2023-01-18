@@ -123,27 +123,17 @@
                 </property>
                </spacer>
               </item>
+              <item row="0" column="0">
+               <widget class="QPushButton" name="buttonActualizarInfo">
+                <property name="text">
+                 <string>Actualizar</string>
+                </property>
+               </widget>
+              </item>
              </layout>
             </widget>
            </item>
           </layout>
-         </widget>
-        </item>
-       </layout>
-      </widget>
-      <widget class="QWidget" name="TabConsola">
-       <attribute name="title">
-        <string comment="Desambiugacion" extracomment="Usa la consola para editar los datos de los alumnos">Consola</string>
-       </attribute>
-       <layout class="QVBoxLayout" name="verticalLayout_2">
-        <item>
-         <widget class="QLineEdit" name="Consola"/>
-        </item>
-        <item>
-         <widget class="QLabel" name="MensajesConsola">
-          <property name="text">
-           <string/>
-          </property>
          </widget>
         </item>
        </layout>
@@ -176,12 +166,14 @@
      <property name="title">
       <string>Base de datos</string>
      </property>
-     <addaction name="actionImportar"/>
      <addaction name="actionExportar"/>
+     <addaction name="separator"/>
+     <addaction name="actionImportar"/>
     </widget>
     <addaction name="menuBase_de_datos"/>
     <addaction name="actionGenerar_lista"/>
     <addaction name="menuJSON"/>
+    <addaction name="actionImportacion_masiva"/>
    </widget>
    <widget class="QMenu" name="menuCursos">
     <property name="title">
@@ -189,7 +181,9 @@
     </property>
     <addaction name="actionOrganizar_PDFs"/>
     <addaction name="actionEscanear_PDF"/>
+    <addaction name="separator"/>
     <addaction name="actionEditar_directorios"/>
+    <addaction name="separator"/>
     <addaction name="actionConfirmar_admision"/>
    </widget>
    <addaction name="menuasdasd"/>
@@ -197,12 +191,12 @@
   </widget>
   <action name="actionImportar">
    <property name="text">
-    <string>Cargar</string>
+    <string>Cargar base de datos</string>
    </property>
   </action>
   <action name="actionExportar">
    <property name="text">
-    <string>Actualizar</string>
+    <string>Actualizar base de datos</string>
    </property>
   </action>
   <action name="actionGenerar_lista">
@@ -217,12 +211,12 @@
   </action>
   <action name="actionImportar_JSON">
    <property name="text">
-    <string>Importar JSON</string>
+    <string>Cargar JSON</string>
    </property>
   </action>
   <action name="actionExportar_JSON">
    <property name="text">
-    <string>Exportar JSON</string>
+    <string>Generar JSON</string>
    </property>
   </action>
   <action name="actionEditar_directorios">
@@ -243,6 +237,11 @@
   <action name="actionConfirmar_admision">
    <property name="text">
     <string>Confirmar admisión</string>
+   </property>
+  </action>
+  <action name="actionImportacion_masiva">
+   <property name="text">
+    <string>Importación masiva</string>
    </property>
   </action>
  </widget>
