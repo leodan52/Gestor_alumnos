@@ -7,9 +7,10 @@ from UI.Ventana_editar import *
 from UI.Ventana_agregar import *
 from UI.Ventana_directorios import *
 from UI.Ventana_cerrar import *
+from UI.Ventana_cargarCSV import *
 from TOOLS.alumno import *
 from PyQt5.QtWidgets import QFileDialog, QCompleter
-import time
+import time, csv
 
 '''
 Pendientes:
@@ -57,6 +58,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 		self.actionGenerar_lista.triggered.connect(self.GenerarListas_)
 		self.actionImportar_JSON.triggered.connect(self.ImportarJSON)
 		self.actionExportar_JSON.triggered.connect(self.ExportarJSON)
+		self.actionImportacion_masiva.triggered.connect(self.ImportarMasivo)
 
 		self.actionOrganizar_PDFs.triggered.connect(self.Org_PDFs_)
 		self.actionEscanear_PDF.triggered.connect(self.Scan_PDFs_)
@@ -65,8 +67,9 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
 		self.BotonBuscar.clicked.connect(self.Buscar)
 		self.BotonAgregar.clicked.connect(self.AgregarBoton)
-		self.AbrirPDF.clicked.connect(self.AbrirPDFBoton)
+		self.buttonActualizarInfo.clicked.connect(self.ActualizarDespliegue)
 		self.BotonEditar.clicked.connect(self.EditarBoton)
+		self.AbrirPDF.clicked.connect(self.AbrirPDFBoton)
 		self.BotonEliminar.clicked.connect(self.EliminarAlumno)
 
 		self.CuadroBuscar.returnPressed.connect(self.BotonBuscar.animateClick)
@@ -103,10 +106,12 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 		self.BotonEditar.setEnabled(False)
 		self.BotonEliminar.setEnabled(False)
 		self.AbrirPDF.setEnabled(False)
+		self.buttonActualizarInfo.setEnabled(False)
 
 	def BotonesOn(self):
 		self.BotonEditar.setEnabled(True)
 		self.BotonEliminar.setEnabled(True)
+		self.buttonActualizarInfo.setEnabled(True)
 
 #		self.Mostrar.itemDoubleClicked.connect(self.BotonEditar.animateClick)
 		self.Mostrar.itemActivated.connect(self.BotonEditar.animateClick)
@@ -219,6 +224,16 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 		self.Listas.GenerarListas(archivo)
 		self.MensajeUser(f'Las listas completas han sido generadas en {archivo}')
 
+	#--- Importación masiva -------------------------------------------------------------------------
+
+	def ImportarMasivo(self):
+
+		''' Despliega ventana para importación masiva '''
+
+		self.VentanaAgregarCSV = V_AgregarCSV()
+		self.VentanaAgregarCSV.AgregarCVS(self.Listas.ImportarCSV)
+		self.VentanaAgregarCSV.show()
+
 	#------- Organizar PDF -------------------------------------------------------------------------
 
 	def Org_PDFs_(self):
@@ -249,9 +264,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 			salida_ = f'{salida_}{fecha}Error en el archivo del alumno {nombre} en "{self.Listas.ErrorPDFs[nombre][0]}":\n'
 			salida_ = f'{salida_}\tEl {self.Listas.ErrorPDFs[nombre][1]} es incorrecto\n\n'
 
-		salidaf = open("Informe_errores_PDF.txt", "w")
-		print(salida_, file=salidaf)
-		salidaf.close()
+		with open("Informe_errores_PDF.txt", "w") as salidaf:
+			print(salida_, file=salidaf)
 
 	# ------ Refrescar desde base de datos --------------------------------------------------------
 
@@ -401,6 +415,15 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
 		self.MensajeUser("Datos del alumno:")
 		self.BotonesOn()
+
+	# ------- Función para botón actualizar para mirar datos de alumno -----------------------------
+
+	def ActualizarDespliegue(self):
+
+		''' Actualiza los datos de alumno mostrados en pantalla para cuando los datos cambien '''
+
+		self.Desplegar_alumnos(self.indice)
+
 
 	#------ Funcion para agregar alumno --------------------------------------------------------
 
@@ -749,6 +772,67 @@ class V_Cerrar(QtWidgets.QDialog, Ui_VentanaCerrar):
 
 	def no_eleccion(self):
 		self.F()
+
+
+#|------------------------------------------------------------------------------------------------------|
+#|------       Clase ventana para alertar durante el cierre                                -------------|
+#|------------------------------------------------------------------------------------------------------|
+
+class V_AgregarCSV(QtWidgets.QDialog, Ui_Ventana_CargarCSV):
+
+	''' Si al cerrar hay cambios sin exportar a la base de datos esta ventana se desplegará '''
+
+	def __init__(self, *args, **kwargs):
+		QtWidgets.QDialog.__init__(self, *args, **kwargs)
+		self.setupUi(self)
+
+		self.headers = "Nombre, Número de registro, carrera, CU\n"
+
+		self.buttonCargarCSV.clicked.connect(self.CargarCSV)
+		self.ButtonAgregarAlumnos.clicked.connect(self.AgregarABase)
+
+
+	def AgregarCVS(self, f):
+		self.F = f
+
+		self.entradaLineas.setPlainText(self.headers)
+
+	def CargarCSV(self):
+
+		archivo = QFileDialog.getOpenFileName(self,"Elige el archivo", "./", "Archivo csv (*.csv)")[0]
+		cadena = ""
+
+		with open(archivo, "r") as entrada:
+			for i in entrada:
+				cadena += i
+
+		contenido = self.entradaLineas.toPlainText()
+
+		self.entradaLineas.setPlainText(contenido.strip() + "\n" + cadena.strip() + "\n")
+
+	def AgregarABase(self):
+		curso = V_AgregarCSV.CrearNombresporDefecto(self.entrada_Curso.text())
+		plantel = V_AgregarCSV.CrearNombresporDefecto(self.entrada_Plantel.text())
+		horario = V_AgregarCSV.CrearNombresporDefecto(self.entrada_Horario.text())
+
+		datos_curso = [curso, plantel, horario]
+		texto = self.entradaLineas.toPlainText().strip().replace(self.headers, "")
+		archivo = ".archivoCSV.csv"
+
+		with open(archivo, "w") as salida:
+			print(texto, file=salida, end="")
+
+		self.F(archivo, datos_curso)
+		self.entradaLineas.clear()
+
+
+	@staticmethod
+	def CrearNombresporDefecto(nombre):
+		if nombre.strip() == "":
+			return "n/a"
+		else:
+			return nombre.strip()
+
 
 
 
