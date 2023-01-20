@@ -2,7 +2,7 @@
 
 import os, sys, subprocess
 from webbrowser import open_new
-import json, fitz
+import json, fitz, pickle
 from pytesseract import pytesseract
 	# necesario
 	# sudo apt install tesseract-ocr
@@ -20,6 +20,19 @@ def main():
 #*-------------------------------------------------------------------------------------------*
 #*------ Funciones especiales----------------------------------------------------------------*
 #*-------------------------------------------------------------------------------------------*
+
+
+def GuardarBinario(objeto, ruta, nombreBase):
+
+	with open(f'{ruta}{nombreBase}', "wb") as salida:
+		pickle.dump(objeto, salida)
+
+def CargarBinario(ruta, nombreBase):
+	with open(f'{ruta}{nombreBase}', "rb") as salida:
+		objeto = pickle.load(salida)
+
+	return objeto
+
 
 def Image2texto(ruta):
 	Im_ruta = ruta.replace("pdf", "png")
@@ -243,7 +256,7 @@ def extraer_historial(ruta_historial):
 		with open(ruta_historial, "r") as entrada:
 			lineas = entrada.readlines()
 	except FileNotFoundError:
-		with  open(ruta_historial, "w") as salida:
+		with open(ruta_historial, "w") as salida:
 			print("{}",file=salida)
 		lineas = "{}"
 	dcc = "".join(lineas)
