@@ -26,6 +26,8 @@ class TodosMisAlumnos:
 		self.ruta_ = os.path.dirname(self.ruta_base_datos)
 		#self.ruta_historial = f'{os.path.dirname(self.ruta_base_datos)}/.CACHE/historial_cambios.txt'
 		self.Arch_dir_historial()
+		self.Data = dict()
+		self.estructuraArbol = dict()
 
 		self.Control_version()
 		self.EntregarPDF()
@@ -208,17 +210,12 @@ class TodosMisAlumnos:
 
 	def UsedData(self):
 
-		if hasattr(self, "Data"):
-			pass
-		else:
-			self.Data = dict()
+		self.Data["Plantel"] = []
+		self.Data["Curso"] = []
+		self.Data["Horario"] = []
 
-			self.Data["Plantel"] = []
-			self.Data["Curso"] = []
-			self.Data["Horario"] = []
-
-			self.Data["Carrera"] = []
-			self.Data["Centro Universitario"] = []
+		self.Data["Carrera"] = []
+		self.Data["Centro Universitario"] = []
 
 		self.ClavesBusqueda = []
 
@@ -677,6 +674,33 @@ class TodosMisAlumnos:
 
 	#--------------------------------------------------------------------------------------------
 
+	def GenerarArbol(self):
+
+		indice = 0
+
+		for i in self.lista:
+			plantel, curso, horario = i.getDatosSalon()
+
+			if plantel not in self.estructuraArbol:
+				self.estructuraArbol[plantel] = dict()
+
+			if curso not in self.estructuraArbol[plantel]:
+				self.estructuraArbol[plantel][curso] = dict()
+
+			if horario not in self.estructuraArbol[plantel][curso]:
+				self.estructuraArbol[plantel][curso][horario] = []
+
+			self.estructuraArbol[plantel][curso][horario].append(f'{i.nombre}&{indice}')
+			indice += 1
+
+	def getArbol(self):
+		self.GenerarArbol()
+
+		return self.estructuraArbol
+
+
+	#--------------------------------------------------------------------------------------------
+
 	def AbrirPDFmenu(self):
 
 		''' Aquí puedes hacer uns búsqueda para abrir el PDF correspondiente a la busqueda del alumno.
@@ -836,6 +860,36 @@ class TodosMisAlumnos:
 
 				self.lista.append(Alumno(*newRow))
 
+	#------------- Exportar CSV ---------------------------------------------------------------
+
+	def ExportarCSV(self, ruta_archivo, *indices):
+
+		with open(ruta_archivo, "w", newline="") as salida:
+			writer = csv.writer(salida)
+
+			for i in indices:
+				alumno = self.lista[i].getDatosCSV()
+				writer.writerow(alumno)
+
+	#----------- Exportar algunos alumnosa JSON ------------------------------------------------
+
+	def ExportarAulaJSON(self, ruta_archivo, *indices):
+
+		salida = {"Alumnos" : []}
+
+		for i in indices:
+			self.lista[i].Alumno2JSON()
+			salida["Alumnos"].append(self.lista[i].datos.copy())
+
+		salida = json.dumps(salida,ensure_ascii=False)
+		salida = PrepararJSON(salida)
+
+		with open(ruta_archivo, "w") as archivo:
+			print(salida, end="", file=archivo)
+
+
+
+
 
 	#-------- Leer dictamen para conocer admitidos -----------------------------------------
 
@@ -885,6 +939,7 @@ class Alumno:
 		self.admitido = "No data"
 
 		self.ValoresVacios()
+		self.DiccAlumno()
 
 	#--------------------------------------------------------------------------------------------
 
@@ -973,6 +1028,28 @@ class Alumno:
 			self.admitido = "*Sí*"
 		else:
 			self.admitido = " No"
+	#--------------------------------------------------------------------------------------------
+
+	def getDatosSalon(self):
+		salida = ([
+			self.plantel,
+			self.curso,
+			self.horario
+			])
+
+		return salida
+
+	#--------------------------------------------------------------------------------------------
+
+	def getDatosCSV(self):
+		salida = ([
+			self.nombre,
+			self.nRegistro,
+			self.carrera,
+			self.CU
+		])
+
+		return salida
 
 	#--------------------------------------------------------------------------------------------
 
@@ -994,7 +1071,7 @@ class Alumno:
 
 		''' Genera diccionario con los datos del alumno como preparación para exportar a JSON '''
 
-		self.datos = ({"Nombre" : self.nombre, "Número de registro" : self.nRegistro,
+		self.datos = ({	"Nombre" : self.nombre, "Número de registro" : self.nRegistro,
 						"Carrera" : self.carrera, "Centro Universitario" : self.CU,
 						"Curso" : self.curso, "Plantel" : self.plantel, "Horario" : self.horario,
-						 "¿Admitido?" : self.admitido})
+						"¿Admitido?" : self.admitido})
