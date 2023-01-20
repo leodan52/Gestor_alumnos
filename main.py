@@ -9,16 +9,9 @@ from UI.Ventana_directorios import *
 from UI.Ventana_cerrar import *
 from UI.Ventana_cargarCSV import *
 from TOOLS.alumno import *
+from TOOLS.objetos import *
 from PyQt5.QtWidgets import QFileDialog, QCompleter
 import time, csv
-
-'''
-Pendientes:
-
-- Consola
-- Botón actualizar
-
-'''
 
 
 #|------------------------------------------------------------------------------------------------------|
@@ -33,6 +26,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 	def __init__(self, *args, **kwargs):
 		QtWidgets.QMainWindow.__init__(self, *args, **kwargs)
 		self.setupUi(self)
+
+
 		self.tabWidget.setCurrentIndex(0)
 
 #		self.Ruta_main = os.path.dirname(os.path.abspath(__file__))
@@ -44,10 +39,15 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 		self.indice = None
 		self.PDF_disponible = "No Data"
 
+		self.arbolPlantel = []
+		self.arbolCurso = []
+		self.arbolHorario = []
+
 		self.Necesario_files()
 		self.Set_RutasBases()
 
 		self.Listas = self.Extraer_()
+		GuardarBinario(self.Listas, "./", "Binario")
 
 		self.MensajeUser(f'Bienvenido. El fichero {self.Ruta_Base}/ ha sido cargado')
 
@@ -71,6 +71,11 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 		self.BotonEditar.clicked.connect(self.EditarBoton)
 		self.AbrirPDF.clicked.connect(self.AbrirPDFBoton)
 		self.BotonEliminar.clicked.connect(self.EliminarAlumno)
+
+		self.buttonActualizarArbol.clicked.connect(self.EscribirArbol)
+		self.buttonEliminarTabListas.clicked.connect(self.EliminardesdeArbol)
+		self.buttonGuardarCSV.clicked.connect(self.GuardarListaArchivo)
+		self.buttonAgregarTabListas.clicked.connect(self.AgregarASalon)
 
 		self.CuadroBuscar.returnPressed.connect(self.BotonBuscar.animateClick)
 
@@ -103,15 +108,22 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 	#--------Habilitar botones o deshabilitar segun sean necesarios o no -----------------------------
 
 	def BotonesDes(self):
-		self.BotonEditar.setEnabled(False)
-		self.BotonEliminar.setEnabled(False)
-		self.AbrirPDF.setEnabled(False)
-		self.buttonActualizarInfo.setEnabled(False)
+		if self.Mostrar.count() == 0:
+			self.BotonEditar.setEnabled(False)
+			self.BotonEliminar.setEnabled(False)
+			self.AbrirPDF.setEnabled(False)
+			self.buttonActualizarInfo.setEnabled(False)
+
+		if self.MostrarListas.count() == 0:
+			self.buttonEliminarTabListas.setEnabled(False)
+			self.buttonAgregarTabListas.setEnabled(False)
+			self.buttonGuardarCSV.setEnabled(False)
 
 	def BotonesOn(self):
-		self.BotonEditar.setEnabled(True)
-		self.BotonEliminar.setEnabled(True)
-		self.buttonActualizarInfo.setEnabled(True)
+		if self.Mostrar.count() != 0:
+			self.BotonEditar.setEnabled(True)
+			self.BotonEliminar.setEnabled(True)
+			self.buttonActualizarInfo.setEnabled(True)
 
 #		self.Mostrar.itemDoubleClicked.connect(self.BotonEditar.animateClick)
 		self.Mostrar.itemActivated.connect(self.BotonEditar.animateClick)
@@ -175,6 +187,9 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 											f'{ruta}/sin_titulo.json',
 											"Archivo JSON (*.json)" )[0]
 
+		if archivo.strip() == "":
+			return
+
 		ruta = os.path.dirname(archivo)
 		r_historial("Salida_JSON",ruta,self.Ruta_Historial)
 
@@ -231,7 +246,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 		''' Despliega ventana para importación masiva '''
 
 		self.VentanaAgregarCSV = V_AgregarCSV()
-		self.VentanaAgregarCSV.AgregarCVS(self.Listas.ImportarCSV)
+		self.VentanaAgregarCSV.AgregarCVS(self.Listas.ImportarCSV, self.Listas.Data)
 		self.VentanaAgregarCSV.show()
 
 	#------- Organizar PDF -------------------------------------------------------------------------
@@ -340,9 +355,9 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 		IndexTab = self.tabWidget.currentIndex()
 		NameTab	= self.tabWidget.tabText(IndexTab)
 
-		if event.key() == QtCore.Qt.Key_P:
+		if event.key() == QtCore.Qt.Key_P and NameTab == "Buscar":
 			self.AbrirPDF.animateClick()
-		elif event.key() == QtCore.Qt.Key_A:
+		elif event.key() == QtCore.Qt.Key_A and NameTab == "Buscar":
 			self.BotonAgregar.animateClick()
 		elif event.modifiers() == QtCore.Qt.ControlModifier:
 			if event.key() == QtCore.Qt.Key_Tab: # Navegar entre pestañas con CTRL + Tab
@@ -351,6 +366,11 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 			elif event.key() == QtCore.Qt.Key_Backtab:
 				IndexTab += 1
 				self.tabWidget.setCurrentIndex(IndexTab)
+		elif event.modifiers() == QtCore.Qt.AltModifier:
+			if event.key() == QtCore.Qt.Key_1:
+				self.tabWidget.setCurrentIndex(0)
+			elif event.key() == QtCore.Qt.Key_2:
+				self.tabWidget.setCurrentIndex(1)
 
 
 	#---------- Funcion consola ----------------------------------------------------------------------
@@ -480,13 +500,13 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
 	#----- Funcion eliminar alumno --------------------------------------------------------------
 
-	def EliminarAlumno(self):
+	def EliminarAlumno(self, f = lambda x = None: x):
 
 		nombre = self.Listas.lista[self.indice].nombre
 
 		self.Alerta = V_Alerta()
 		self.Alerta.CambiarMensaje(f'¿Estás seguro de borrar al alumno {nombre}?')
-		self.Alerta.ActFun(self.Eliminar_)
+		self.Alerta.ActFun(self.Eliminar_, f)
 		self.Alerta.show()
 
 	def Eliminar_(self):
@@ -495,6 +515,138 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
 		self.Mostrar.clear()
 		self.BotonesDes()
+
+	#----- General arbol para pestaña listas ---------------------------------------------------------
+
+	def EscribirArbol(self):
+
+		arbol = self.Listas.getArbol()
+
+		if len(arbol) == 0:
+			return
+
+		self.buttonActualizarArbol.setText("Actualizar")
+
+		planteles = [*arbol.keys()]
+		planteles.sort()
+
+		for plantel in planteles:
+			cursos = [*arbol[plantel].keys()]
+			cursos.sort()
+
+			self.arbolPlantel.append(TreeItem(self.ArbolListas, "plantel"))
+			self.arbolPlantel[-1].setText(0, plantel)
+
+			for curso in cursos:
+				horarios = [*arbol[plantel][curso].keys()]
+				horarios.sort()
+
+				self.arbolCurso.append(TreeItem(self.arbolPlantel[-1], "curso"))
+				self.arbolCurso[-1].setText(0, curso)
+
+				for horario in horarios:
+					arbol[plantel][curso][horario].sort()
+
+					self.arbolHorario.append(TreeItem(self.arbolCurso[-1], "horario"))
+					self.arbolHorario[-1].setText(0, horario)
+					self.arbolHorario[-1].setListaAlumnos(arbol[plantel][curso][horario])
+					self.arbolHorario[-1].setSalonDatos([plantel, curso, horario])
+
+		self.ArbolListas.itemActivated.connect(self.ImprimirdeArbol)
+
+	def ImprimirdeArbol(self):
+		item = self.ArbolListas.currentItem()
+
+		if item.getTipo() != "horario":
+			return
+
+
+		self.aulaLista = item.getLista()
+		self.aulaDatos = item.getSalonDatos()
+
+		self.MostrarListas.clear()
+
+		for i in self.aulaLista:
+			self.MostrarListas.addItem(" "*5 + i["nombre"])
+
+		self.buttonEliminarTabListas.setEnabled(True)
+		self.buttonAgregarTabListas.setEnabled(True)
+		self.buttonGuardarCSV.setEnabled(True)
+
+
+		self.MostrarListas.itemActivated.connect(self.MostrarDatosdTabListas)
+
+	# ---- Funcions para botones de la pestaña Listas -------------------------------------------------
+
+
+	def MostrarDatosdTabListas(self):
+
+		numLista = self.MostrarListas.currentRow()
+		indice = self.aulaLista[numLista]["indice"]
+
+		self.tabWidget.setCurrentIndex(0)
+
+		self.Desplegar_alumnos(indice)
+
+	def EliminardesdeArbol(self):
+		numLista = self.MostrarListas.currentRow()
+
+		self.MostrarDatosdTabListas()
+
+		self.EliminarAlumno(lambda x = numLista: self.RegresarATabYEliminar(x))
+
+	def RegresarATabYEliminar(self, row):
+
+		self.tabWidget.setCurrentIndex(1)
+
+		if self.indice == None:
+			self.MostrarListas.takeItem(row)
+
+	def GuardarListaArchivo(self):
+
+		historial_rutas =extraer_historial(self.Ruta_Historial)
+
+		try:
+			ruta = historial_rutas["GuardaSalonArchivo"]
+		except KeyError:
+			ruta = "."
+
+		datosCurso ="_".join(self.aulaDatos)
+
+		OpenFile = QFileDialog.getSaveFileName(self,"Elige el archivo",
+												 f'.{ruta}{datosCurso}.csv;;./{datosCurso}.json',
+												 "Archivo CSV (*.csv);;Archivo JSON (*.json)")
+		archivo = OpenFile[0]
+
+		if archivo == "":
+			return
+
+		path_archivo = os.path.dirname(archivo)
+		r_historial("GuardaSalonArchivo", path_archivo, self.Ruta_Historial)
+
+		indices = []
+
+		for i in self.aulaLista:
+			indices.append(i["indice"])
+
+
+		if OpenFile[1].startswith("Archivo CSV"):
+			self.Listas.ExportarCSV(archivo, *indices)
+		else:
+			self.Listas.ExportarAulaJSON(archivo, *indices)
+
+	def AgregarASalon(self):
+
+		datos_key = ["Plantel", "Curso", "Horario"]
+		datos = {d: cadena for d, cadena in zip(datos_key, self.aulaDatos)}
+
+
+		self.V_Add = V_Agregar()
+		self.V_Add.infuncion(self.Agregar_2, self.Listas.Data)
+		self.V_Add.LlenarDatos(datos)
+		self.V_Add.show()
+
+
 
 	#----- Desplegar ventana alerta ---------------------------------------------------------
 
@@ -642,10 +794,16 @@ class V_Alerta(QtWidgets.QDialog, Ui_VentanaAlerta):
 
 		self.MensajeNoHay.setText(cadena)
 
-	def ActFun(self, f):
+	def ActFun(self, f, f2):
 		self.F = f
+		self.F2 = f2
 
-		self.buttonBox.accepted.connect(self.F)
+		self.buttonBox.accepted.connect(self.Funciones)
+		self.buttonBox.rejected.connect(self.F2)
+
+	def Funciones(self):
+		self.F()
+		self.F2()
 
 #|------------------------------------------------------------------------------------------------------|
 #|------       Clase ventana para agregar                                                  -------------|
@@ -677,6 +835,25 @@ class V_Agregar(QtWidgets.QDialog, Ui_VentanaAgregar):
 		self.a_curso.setCompleter(self.completa["Curso"])
 		self.a_plantel.setCompleter(self.completa["Plantel"])
 		self.a_horario.setCompleter(self.completa["Horario"])
+
+		self.cuadrosTexto = ({"Nombre": self.a_nombre, "Número de registro": self.a_nregistro,
+							 "Carrera": self.a_carrera, "Centro Universitario": self.a_CU,
+							 "Curso": self.a_curso, "Plantel": self.a_plantel,
+							 "Horario": self.a_horario})
+
+	def LlenarDatos(self, dicc):
+
+		for i in dicc:
+			self.cuadrosTexto[i].setText(dicc[i])
+
+
+#		for i in dicc:
+#			if i == "Plantel":
+#				self.a_plantel.setText(dicc[i])
+#			elif i == "Curso":
+#				self.a_curso.setText(dicc[i])
+#			elif i == "Horario":
+#				self.a_horario.setText(dicc[i])
 
 
 	def addAlumno(self):
@@ -792,15 +969,32 @@ class V_AgregarCSV(QtWidgets.QDialog, Ui_Ventana_CargarCSV):
 		self.ButtonAgregarAlumnos.clicked.connect(self.AgregarABase)
 
 
-	def AgregarCVS(self, f):
+	def AgregarCVS(self, f, op="n"):
 		self.F = f
 
 		self.entradaLineas.setPlainText(self.headers)
+
+		if op == "n":
+			return
+
+		self.completa = dict()
+		for i in op:
+			self.completa[i] = QCompleter(op[i])
+			self.completa[i].setCaseSensitivity(QtCore.Qt.CaseInsensitive)
+
+		self.entrada_Curso.setCompleter(self.completa["Curso"])
+		self.entrada_Plantel.setCompleter(self.completa["Plantel"])
+		self.entrada_Horario.setCompleter(self.completa["Horario"])
 
 	def CargarCSV(self):
 
 		archivo = QFileDialog.getOpenFileName(self,"Elige el archivo", "./", "Archivo csv (*.csv)")[0]
 		cadena = ""
+
+		# Falta historial
+
+		if archivo.strip() == "":
+			return
 
 		with open(archivo, "r") as entrada:
 			for i in entrada:
