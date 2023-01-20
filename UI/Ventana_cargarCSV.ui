@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Dialog</string>
+   <string>Agrega varios alumnos a la vez</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
    <item row="0" column="0">
@@ -27,6 +27,9 @@
    </item>
    <item row="1" column="0">
     <widget class="QWidget" name="Caja_info" native="true">
+     <property name="accessibleDescription">
+      <string/>
+     </property>
      <property name="styleSheet">
       <string notr="true">padding:  3%</string>
      </property>
@@ -42,7 +45,20 @@
        </widget>
       </item>
       <item row="0" column="1">
-       <widget class="QLineEdit" name="entrada_Curso"/>
+       <widget class="QLineEdit" name="entrada_Curso">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Ingresa el nombre del curso&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
+        <property name="whatsThis">
+         <string/>
+        </property>
+        <property name="accessibleName">
+         <string/>
+        </property>
+        <property name="accessibleDescription">
+         <string/>
+        </property>
+       </widget>
       </item>
       <item row="0" column="2">
        <widget class="QLabel" name="label_3">
@@ -55,7 +71,11 @@
        </widget>
       </item>
       <item row="0" column="3">
-       <widget class="QLineEdit" name="entrada_Horario"/>
+       <widget class="QLineEdit" name="entrada_Horario">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Ingresa el horario&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
+       </widget>
       </item>
       <item row="1" column="0">
        <widget class="QLabel" name="label_4">
@@ -68,7 +88,11 @@
        </widget>
       </item>
       <item row="1" column="1">
-       <widget class="QLineEdit" name="entrada_Plantel"/>
+       <widget class="QLineEdit" name="entrada_Plantel">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Ingresa el plantel donde se imparte el curso&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
+       </widget>
       </item>
       <item row="1" column="3">
        <widget class="QWidget" name="widget_2" native="true">
@@ -133,15 +157,20 @@
            <layout class="QVBoxLayout" name="verticalLayout">
             <item>
              <widget class="QPushButton" name="buttonCargarCSV">
+              <property name="toolTip">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Carga un archivo CSV&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              </property>
+              <property name="whatsThis">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Cargar archivos CSV con datos de varios alumnos a la vez&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              </property>
+              <property name="accessibleName">
+               <string/>
+              </property>
+              <property name="accessibleDescription">
+               <string/>
+              </property>
               <property name="text">
                <string>Cargar CSV</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QPushButton" name="ButtonGuardarCSV">
-              <property name="text">
-               <string>Guardar CSV</string>
               </property>
              </widget>
             </item>
@@ -160,6 +189,9 @@
             </item>
             <item>
              <widget class="QPushButton" name="ButtonAgregarAlumnos">
+              <property name="toolTip">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Agrega los datos escritos&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              </property>
               <property name="text">
                <string>Agregar alumnos</string>
               </property>
@@ -169,7 +201,11 @@
           </widget>
          </item>
          <item>
-          <widget class="QTextEdit" name="entradaLineas"/>
+          <widget class="QTextEdit" name="entradaLineas">
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Escribe los datos de los alumnos&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+          </widget>
          </item>
         </layout>
        </widget>
