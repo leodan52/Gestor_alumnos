@@ -5,7 +5,8 @@
 .CACHE/
 **/__pycache__
 Cursos/
-Cursos_pdf/
+PDFs/
+BASE/
 .Imagenes_temp/
 
 Binario
