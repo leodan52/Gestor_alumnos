@@ -22,13 +22,15 @@ def main():
 #*-------------------------------------------------------------------------------------------*
 
 
-def GuardarBinario(objeto, ruta, nombreBase):
+def GuardarBinario(objeto, ruta):
 
-	with open(f'{ruta}{nombreBase}', "wb") as salida:
+	with open(ruta, "wb") as salida:
 		pickle.dump(objeto, salida)
 
-def CargarBinario(ruta, nombreBase):
-	with open(f'{ruta}{nombreBase}', "rb") as salida:
+
+def CargarBinario(ruta):
+
+	with open(ruta, "rb") as salida:
 		objeto = pickle.load(salida)
 
 	return objeto
@@ -237,11 +239,15 @@ def procesar(cadena):
 
 def Abrete(ruta):
 
+	print(ruta)
+
 	if sys.platform == "linux":
-		try:
-			os.system(f'xdg-open "./{ruta}" >/dev/null 2>&1 &')
-		except:
-			subprocess.call(('xdg-open', ruta))
+		os.system(f'xdg-open "{ruta}" >/dev/null 2>&1 &')
+#		try:
+#			os.system(f'xdg-open "{ruta}" >/dev/null 2>&1 &')
+#		except:
+#			print("hola")
+#			subprocess.call(('xdg-open', ruta))
 	elif sys.platform == "win32":
 		os.startfile(f'"{ruta}"')
 	elif sys.platform == "darwin":
