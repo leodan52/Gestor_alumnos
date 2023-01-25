@@ -15,15 +15,14 @@ from datetime import datetime
 
 class TodosMisAlumnos:
 
-	def __init__(self,lista_,ruta_pdf,ruta_base_datos):
+	def __init__(self,lista_,ruta_pdf, ruta_base_datos):
 
 		''' Clase que contiene las listas de todos los alumnos '''
 
 		self.lista = lista_
 		self.ruta_pdf = ruta_pdf
 		self.ruta_base_datos = ruta_base_datos
-		self.ruta_h = f'.CACHE'
-		self.ruta_ = os.path.dirname(self.ruta_base_datos)
+		self.ruta_h = os.path.join(os.path.dirname(self.ruta_base_datos), ".CACHE")
 		#self.ruta_historial = f'{os.path.dirname(self.ruta_base_datos)}/.CACHE/historial_cambios.txt'
 		self.Arch_dir_historial()
 		self.Data = dict()
@@ -32,7 +31,7 @@ class TodosMisAlumnos:
 		self.Control_version()
 		self.EntregarPDF()
 		self.UsedData()
-		self.Cambios_base()
+#		self.Cambios_base()
 
 		self.CambiosSinGuardar = []
 
@@ -42,39 +41,34 @@ class TodosMisAlumnos:
 		self.ruta_historial = f'historial_cambios.txt'
 		self.base_status = f'base_estatus.json'
 		self.lineasF_status = f'lineas_estatus.json'
-		aux = "/"
 
-		if self.ruta_ == "":
-			aux = ""
-
-		self.ruta_ = f'{self.ruta_}{aux}'
-		self.ruta_historial = f'{self.ruta_}{self.ruta_h}/{self.ruta_historial}'
-		self.base_status = f'{self.ruta_}{self.ruta_h}/{self.base_status}'
-		self.lineasF_status = f'{self.ruta_}{self.ruta_h}/{self.lineasF_status}'
+		self.ruta_historial = os.path.join(self.ruta_h, self.ruta_historial)
+		self.base_status = os.path.join(self.ruta_h, self.base_status)
+		self.lineasF_status = os.path.join(self.ruta_h, self.lineasF_status)
 
 	#---------------------------------------------------------------------------------------------
 
 	def Control_version(self):
-		versiones_ruta = f'{self.ruta_}{self.ruta_h}/Historial_versiones'
+		versiones_ruta = os.path.join(self.ruta_h, "Historial_versiones")
 		maxi = 50
 
 #		if os.path.dirname(self.ruta_base_datos) == "":
 #			versiones_ruta = f'.CACHE/Historial_versiones'
 #			self.ruta_historial = f'.CACHE/historial_cambios.txt'
 
-		os.makedirs(versiones_ruta,exist_ok = True)
+		os.makedirs(versiones_ruta, exist_ok = True)
 
 		versiones = os.listdir(versiones_ruta)
 
 		date = datetime.today().strftime('%Y-%m-%d %H_%M_%S')
-		add_version = f'{versiones_ruta}/{date}.json'
+		add_version = os.path.join(versiones_ruta, f'{date}.json')
 
 		if versiones == []:
 			self.Todos2JSON(add_version)
 			return
 
 		versiones.sort()
-		ruta_ulti = f'{versiones_ruta}/{versiones[-1]}'
+		ruta_ulti = os.path.join(versiones_ruta, versiones[-1])
 		ulti = self.ImportJSON(ruta_ulti, False)
 
 		nueva = self.Todos2JSON("", False)
@@ -94,11 +88,11 @@ class TodosMisAlumnos:
 		for i in versiones:
 			if versiones.index(i) == delta:
 				break
-			os.remove(f'{versiones_ruta}/{i}')
+			os.remove(os.path.join(versiones, i))
 
 	#---------------------------------------------------------------------------------------------
 
-	def Cambios_base(self, cargar = False):
+	def Cambios_base(self, cargar = False): # Revisar en qué momento se usa
 
 		arbol = dict()
 
@@ -168,7 +162,7 @@ class TodosMisAlumnos:
 
 		for ruta in self.Grupos_ruta:
 			for grupo in self.Grupos_ruta[ruta]:
-				Lineas[f'{ruta}/{grupo}'] = Extraer2TXT(f'{ruta}/{grupo}')
+				Lineas[ os.path.join(ruta, grupo) ] = Extraer2TXT(os.path.join(ruta, grupo))
 
 		para_w = PrepararJSON(Lineas, cadena_not = True)
 
@@ -353,10 +347,10 @@ class TodosMisAlumnos:
 					self.Eventos_control(mensaje)
 
 				try:
-					os.rename(ruta1, f'{self.ruta_pdf}/{nueva_ruta}/{PDF}')
+					os.rename(ruta1, os.path.join(self.ruta_pdf, nueva_ruta, PDF))
 				except FileNotFoundError:
-					os.mkdir(f'{self.ruta_pdf}/{nueva_ruta}')
-					os.rename(ruta1, f'{self.ruta_pdf}/{nueva_ruta}/{PDF}')
+					os.mkdir( os.path.join(self.ruta_pdf, nueva_ruta) )
+					os.rename(ruta1, os.path.join(self.ruta_pdf, nueva_ruta, PDF) )
 				except FileExistsError:
 					print("No sé que pasa")
 
@@ -437,7 +431,7 @@ class TodosMisAlumnos:
 		for curso in cursos:
 
 			try:
-				PDFs = os.listdir(self.ruta_pdf + "/" + curso)
+				PDFs = os.listdir( os.path.join(self.ruta_pdf, curso))
 			except NotADirectoryError:
 				continue
 
@@ -445,7 +439,7 @@ class TodosMisAlumnos:
 
 			for PDF in PDFs:
 
-				rutaPDF = self.ruta_pdf + "/" + curso + "/" + PDF
+				rutaPDF = os.path.join(self.ruta_pdf, curso, PDF)
 				PDF = quitaracentos(PDF)
 
 				if "pdf" not in PDF.split("."):
@@ -467,7 +461,7 @@ class TodosMisAlumnos:
 
 	#--------------------------------------------------------------------------------------------
 
-	def ReescribirBaseDatos(self, Consola = True):
+	def ReescribirBaseDatos(self, Consola = True): # Proxima a borrar
 
 		''' Reescribe la base de datos principal. Lo anterior se perderá (por ahora) '''
 
@@ -475,8 +469,8 @@ class TodosMisAlumnos:
 		rmtree(self.ruta_base_datos)
 
 		for alumno in self.lista:
-			directorio = f'{self.ruta_base_datos}/{alumno.plantel}/{alumno.curso}'
-			Salon_actual = directorio + "/" + alumno.horario + ".txt"
+			directorio = os.path.join(self.ruta_base_datos, alumno.plantel, alumno.curso)
+			Salon_actual = os.path.join(directorio, f'[alumno.horario].txt')
 
 			try:
 				os.listdir(directorio)
@@ -534,7 +528,7 @@ class TodosMisAlumnos:
 
 	#--------------------------------------------------------------------------------------------
 
-	def consolaEditar(self):
+	def consolaEditar(self): # Proxima a borrar
 
 		''' Gestor de edición para terminal '''
 
@@ -572,7 +566,7 @@ class TodosMisAlumnos:
 
 	#--------------------------------------------------------------------------------------------
 
-	def consolaEditar_GUI(self,cadena,funcion):
+	def consolaEditar_GUI(self,cadena,funcion): # Proxima a borrar
 
 		''' Gestor de edición desde pestaña de consola de la GUI. Incompleta '''
 
@@ -833,12 +827,13 @@ class TodosMisAlumnos:
 
 		datos = json.loads(lineas)
 
+		if len(datos) == 0:
+			return
+
 		if importar:
 			pass
 		else:
 			return datos
-
-		self.lista = []
 
 		for alumno in datos["Alumnos"]:
 			n, nr, c = alumno["Nombre"],alumno["Número de registro"],alumno["Carrera"]
@@ -846,6 +841,12 @@ class TodosMisAlumnos:
 			curso,plantel,horario = alumno["Curso"],alumno["Plantel"],alumno["Horario"]
 
 			self.lista.append(Alumno(n,nr,c,cu,curso,plantel,horario))
+
+
+		fecha = datetime.today().strftime('%Y-%m-%d %H:%M')
+		cambio = f'{fecha}:\n\tEl archivo {archivo} fue cargado. Mire el contenido para más información'
+		self.Cambios_realizados(cambio)
+		self.UsedData()
 
 	#------------- Importar CSV ---------------------------------------------------------------
 
@@ -856,9 +857,16 @@ class TodosMisAlumnos:
 			lector = csv.reader(entrada)
 
 			for row in lector:
-				newRow = row + datos_curso
+				if row == [] or row == [""]:
+					continue
 
+				newRow = row + datos_curso
 				self.lista.append(Alumno(*newRow))
+
+		fecha = datetime.today().strftime('%Y-%m-%d %H:%M')
+		cambio = f'{fecha}:\n\tEl archivo {archivo} fue cargado. Mire el contenido para más información'
+		self.Cambios_realizados(cambio)
+		self.UsedData()
 
 	#------------- Exportar CSV ---------------------------------------------------------------
 
