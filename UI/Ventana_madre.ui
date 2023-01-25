@@ -321,15 +321,13 @@
      <addaction name="actionImportar_JSON"/>
      <addaction name="actionExportar_JSON"/>
     </widget>
-    <widget class="QMenu" name="menuBase_de_datos">
-     <property name="title">
-      <string>Base de datos</string>
-     </property>
-     <addaction name="actionExportar"/>
-     <addaction name="separator"/>
-     <addaction name="actionImportar"/>
-    </widget>
-    <addaction name="menuBase_de_datos"/>
+    <addaction name="actionNuevo"/>
+    <addaction name="actionAbrir_carpeta"/>
+    <addaction name="actionRecientes"/>
+    <addaction name="separator"/>
+    <addaction name="actionGuardar"/>
+    <addaction name="actionGuardar_en"/>
+    <addaction name="separator"/>
     <addaction name="actionGenerar_lista"/>
     <addaction name="menuJSON"/>
     <addaction name="actionImportacion_masiva"/>
@@ -400,7 +398,32 @@
   </action>
   <action name="actionImportacion_masiva">
    <property name="text">
-    <string>Importación masiva</string>
+    <string>Agregar con CSV</string>
+   </property>
+  </action>
+  <action name="actionAbrir_carpeta">
+   <property name="text">
+    <string>Abrir carpeta...</string>
+   </property>
+  </action>
+  <action name="actionRecientes">
+   <property name="text">
+    <string>Recientes</string>
+   </property>
+  </action>
+  <action name="actionGuardar">
+   <property name="text">
+    <string>Guardar</string>
+   </property>
+  </action>
+  <action name="actionGuardar_en">
+   <property name="text">
+    <string>Guardar en...</string>
+   </property>
+  </action>
+  <action name="actionNuevo">
+   <property name="text">
+    <string>Nuevo</string>
    </property>
   </action>
  </widget>
