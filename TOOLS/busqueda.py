@@ -107,6 +107,7 @@ def buscar_GUI(entrada,Lista):
 
 	for alumno in Lista:
 		comparar = alumno.comparar_nombre.split(" ")
+		nombre_ = alumno.nombre
 
 		indice = 0
 
@@ -114,10 +115,14 @@ def buscar_GUI(entrada,Lista):
 			if i in comparar:
 				indice += 1
 
+		while nombre_ in dict(coin_totales, **coin_parciales):
+			nombre_ += "+"
+
+
 		if indice == len(entrada):
-			coin_totales[alumno.nombre] = n
+			coin_totales[nombre_] = n
 		elif indice > 0:
-			coin_parciales[alumno.nombre] = n
+			coin_parciales[nombre_] = n
 
 		n += 1
 
