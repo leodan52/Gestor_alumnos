@@ -449,11 +449,15 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
 	#----- Funcion eliminar alumno --------------------------------------------------------------
 
-	def EliminarAlumno(self, f = lambda x = None: x):
+	def EliminarAlumno(self, f = None):
 
 		''' Funcion para preguntar a usuario si está seguro de eliminar alumno '''
 
 		nombre = self.Listas.lista[self.indice].nombre
+
+
+		if not f:
+			f = lambda: None
 
 		self.Alerta = V_Alerta()
 		self.Alerta.CambiarMensaje(f'¿Estás seguro de borrar al alumno {nombre}?')
@@ -875,10 +879,13 @@ class V_Alerta(QtWidgets.QDialog, Ui_VentanaAlerta):
 		self.F2 = f2
 
 		self.buttonBox.accepted.connect(self.Funciones)
-		self.buttonBox.rejected.connect(self.F2)
+		self.buttonBox.rejected.connect(self.NoEleccion)
 
 	def Funciones(self):
 		self.F()
+		self.F2()
+
+	def NoEleccion(self):
 		self.F2()
 
 #|------------------------------------------------------------------------------------------------------|
@@ -1004,8 +1011,15 @@ class V_Cerrar(QtWidgets.QDialog, Ui_VentanaCerrar):
 		self.buttonBox.rejected.connect(self.no_eleccion)
 		self.NoCerrar.clicked.connect(self.close)
 
-	def MostrarCambios(self,lista, f):
+	def MostrarCambios(self,diccionario, f):
 		self.F = f
+
+		lista = []
+
+		for i in diccionario:
+			if i not in lista:
+				lista.append(i)
+			lista += diccionario[i]
 
 		cadena = "\n".join(lista)
 
