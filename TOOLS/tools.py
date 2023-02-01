@@ -181,19 +181,9 @@ def Entrada4JSON(lista):
 
 #--------------------------------------------------------------------------------------------
 
-def Agregar2TXT(ruta,lista):
-	try:
-		with open(ruta, "r") as entrada:
-			lineas = entrada.readlines()
-	except FileNotFoundError:
-		lineas = []
+def Agregar2TXT(ruta,lista): # Prestar atención a que siempre agregue en nueva linea
 
-	with open(ruta, "w") as salida:
-
-		for i in lineas:
-			if i.strip() == "":
-				continue
-			print(i.rstrip(), file=salida)
+	with open(ruta, "a") as salida:
 
 		for j in lista:
 			print(j, file=salida)
