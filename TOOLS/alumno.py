@@ -23,38 +23,39 @@ class TodosMisAlumnos:
 		self.ruta_pdf = ruta_pdf
 		self.ruta_base_datos = ruta_base_datos
 		self.ruta_h = os.path.join(os.path.dirname(self.ruta_base_datos), ".CACHE")
-		#self.ruta_historial = f'{os.path.dirname(self.ruta_base_datos)}/.CACHE/historial_cambios.txt'
+		self.ruta_historial = f'historial_cambios.txt'
+#		self.base_status = f'base_estatus.json'
+#		self.lineasF_status = f'lineas_estatus.json'
 		self.Arch_dir_historial()
 		self.Data = dict()
 		self.estructuraArbol = dict()
+		self.CambiosSinGuardar = dict()
+		self.ClavesBusqueda = []
 
 		self.Control_version()
 		self.EntregarPDF()
 		self.UsedData()
-#		self.Cambios_base()
 
-		self.CambiosSinGuardar = []
+
 
 	#---------------------------------------------------------------------------------------------
 
 	def Arch_dir_historial(self):
-		self.ruta_historial = f'historial_cambios.txt'
-		self.base_status = f'base_estatus.json'
-		self.lineasF_status = f'lineas_estatus.json'
+
+		''' Construye las rutas de archivos de historial '''
 
 		self.ruta_historial = os.path.join(self.ruta_h, self.ruta_historial)
-		self.base_status = os.path.join(self.ruta_h, self.base_status)
-		self.lineasF_status = os.path.join(self.ruta_h, self.lineasF_status)
+#		self.base_status = os.path.join(self.ruta_h, self.base_status)
+#		self.lineasF_status = os.path.join(self.ruta_h, self.lineasF_status)
 
 	#---------------------------------------------------------------------------------------------
 
 	def Control_version(self):
+
+		''' Guarda hasta 50 versiones pasadas en formato JSON '''
+
 		versiones_ruta = os.path.join(self.ruta_h, "Historial_versiones")
 		maxi = 50
-
-#		if os.path.dirname(self.ruta_base_datos) == "":
-#			versiones_ruta = f'.CACHE/Historial_versiones'
-#			self.ruta_historial = f'.CACHE/historial_cambios.txt'
 
 		os.makedirs(versiones_ruta, exist_ok = True)
 
@@ -90,119 +91,56 @@ class TodosMisAlumnos:
 				break
 			os.remove(os.path.join(versiones, i))
 
-	#---------------------------------------------------------------------------------------------
+	#--------------------------------------------------------------------------------------------
 
-	def Cambios_base(self, cargar = False): # Revisar en qué momento se usa
+	def EntregarPDF(self):
 
-		arbol = dict()
-
-		self.Grupos_ruta = dict()
-
-		for ruta,direc,arch in os.walk(self.ruta_base_datos):
-			arbol[ruta] = {"directorios":direc, "archivos":arch}
-			if len(arch) != 0:
-				self.Grupos_ruta[ruta] = arch.copy()
-
-		Cambios_lineas = self.Cambios2Files(cargar)
-		para_w = PrepararJSON(arbol, cadena_not = True)
+		''' Revisa la base de PDFs para verificar si cada alumno entregó o no su archivo PDF '''
 
 		try:
-			with open(self.base_status, "r") as entrada:
-				antiguo = entrada.readlines()
+			cursos = os.listdir(self.ruta_pdf)
 		except FileNotFoundError:
-			cargar = True
-		else:
-			antiguo = Entrada4JSON(antiguo)
+			os.mkdir(self.ruta_pdf)
+			cursos = os.listdir(self.ruta_pdf)
 
-		with open(self.base_status, "w") as salida:
-			print(para_w, file=salida)
+		entregado = dict()
 
-		if cargar:
-			return
+		for curso in cursos:
 
-		Cambios = []
-
-		for ruta in antiguo:
-			for objeto in antiguo[ruta]:
-				try:
-					eli, agr = comparar_C(antiguo[ruta][objeto], arbol[ruta][objeto])
-				except KeyError:
-					continue
-				if len(eli) == 0 and len(agr) == 0:
-					continue
-				Cambios.append({"ruta":ruta, "Obj":objeto, "rm":eli.copy(), "add":agr.copy()})
-
-		fecha = datetime.today().strftime('%Y-%m-%d %H:%M')
-		Cam_ = [f'{fecha}:']
-		for i in Cambios:
-			Cam_.append(f'\tEn la ruta {i["ruta"]}/, en cuanto a {i["Obj"]}:')
-
-			if len(i["add"]) != 0:
-				Cam_.append(f'\t\tSe agregó:')
-
-				for j in i["add"]:
-					Cam_.append(f'\t\t\t{j}')
-
-			if len(i["rm"]) != 0:
-				Cam_.append(f'\t\tSe eliminó:')
-
-				for j in i["rm"]:
-					Cam_.append(f'\t\t\t{j}')
-
-		Cam_ = Cam_ + Cambios_lineas
-
-		if len(Cam_) != 1:
-			Agregar2TXT(self.ruta_historial, Cam_)
-
-	#---------------------------------------------------------------------------------------------
-
-	def Cambios2Files(self,cargar = False):
-
-		Lineas = dict()
-
-		for ruta in self.Grupos_ruta:
-			for grupo in self.Grupos_ruta[ruta]:
-				Lineas[ os.path.join(ruta, grupo) ] = Extraer2TXT(os.path.join(ruta, grupo))
-
-		para_w = PrepararJSON(Lineas, cadena_not = True)
-
-		try:
-			Lineas_old = Extraer2TXT(self.lineasF_status)
-			Lineas_old = Entrada4JSON(Lineas_old)
-		except FileNotFoundError:
-			cargar = True
-
-		with open(self.lineasF_status, "w") as salida:
-			print(para_w, file=salida)
-
-		if cargar:
-			return []
-
-		inter_rutas = Inter_C(Lineas.keys(), Lineas_old.keys())
-
-		salida = []
-
-		for r in inter_rutas:
-			eli, agr = comparar_C(Lineas_old[r], Lineas[r])
-			if len(eli + agr) == 0:
+			try:
+				PDFs = os.listdir( os.path.join(self.ruta_pdf, curso))
+			except NotADirectoryError:
 				continue
 
-			salida.append(f'\tSe realizaron cambios en el archivo {r}:')
+			#datos_curso = curso.split("_")
 
-			if len(eli) != 0:
-				salida.append(f'\t\tSe eliminaron las lineas:')
-				for i in eli:
-					salida.append(f'\t\t\tLinea {Lineas_old[r].index(i) + 1}: {i}')
+			for PDF in PDFs:
 
-			if len(agr) != 0:
-				salida.append(f'\t\tSe agregaron las lineas:')
-				for i in agr:
-					salida.append(f'\t\t\tComo linea {Lineas[r].index(i) + 1}: {i}')
+				rutaPDF = os.path.join(self.ruta_pdf, curso, PDF)
+				PDF = quitaracentos(PDF)
 
-		return salida
+				if "pdf" not in PDF.split("."):
+					continue
+
+				entregado[PDF.replace(".pdf","")] = rutaPDF
+
+		for alumno in self.lista:
+			alumno.ReiniciarPDFs()
+
+		for alumno in self.lista:
+			nombre = alumno.comparar_nombre
+
+			if nombre in entregado:
+				alumno.NR_entregado = "Sí"
+				alumno.RutaPDF = entregado[nombre]
+			else:
+				alumno.NR_entregado = "*No*"
+
 	#---------------------------------------------------------------------------------------------
 
 	def UsedData(self):
+
+		''' Mantiene un control de los datos en común para cada alumno '''
 
 		self.Data["Plantel"] = []
 		self.Data["Curso"] = []
@@ -210,8 +148,6 @@ class TodosMisAlumnos:
 
 		self.Data["Carrera"] = []
 		self.Data["Centro Universitario"] = []
-
-		self.ClavesBusqueda = []
 
 		for alumno in self.lista:
 			if alumno.plantel not in self.Data["Plantel"]:
@@ -234,21 +170,27 @@ class TodosMisAlumnos:
 		for i in self.Data:
 			self.Data[i].sort()
 
+
 	#---------------------------------------------------------------------------------------------
 
 	def Cambios_realizados(self,cadena):
 
 		''' Hace un seguimiento de los cambios sin guardar realizados a la base de datos '''
 
+		fecha = datetime.today().strftime('%Y-%m-%d %H:%M:')
+
 		try:
-			self.CambiosSinGuardar.append(cadena)
-		except AttributeError:
-			self.CambiosSinGuardar = []
-			self.CambiosSinGuardar.append(cadena)
+			self.CambiosSinGuardar[fecha].append(cadena)
+		except KeyError:
+			self.CambiosSinGuardar[fecha] = [cadena]
+		except TypeError:
+			self.CambiosSinGuardar = {fecha: [cadena]}
+
 
 	def Eventos_control(self,cadena):
 
 		''' Hace seguimiento de eventos relevantes para la gestion '''
+
 		Agregar2TXT(self.ruta_historial, [cadena])
 
 
@@ -258,17 +200,25 @@ class TodosMisAlumnos:
 
 		''' Al importar los cambios a la base de datos, guarda los cambios en el archivo historial y
 			vacía el seguimiento de cambios sin guardar '''
-		if self.CambiosSinGuardar != []:
-			Agregar2TXT(self.ruta_historial, self.CambiosSinGuardar)
-			self.CambiosSinGuardar = []
 
-	#---------------------------------------------------------------------------------------------
+#		if self.CambiosSinGuardar != []:
+#			Agregar2TXT(self.ruta_historial, self.CambiosSinGuardar)
+#			self.CambiosSinGuardar = []
 
-#	def NombreListas(self, nombre):
+		if len(self.CambiosSinGuardar) == 0:
+			return
 
-#		''' Método para cambiar la ruta de las bases de datos '''
+		lista = []
 
-#		self.ruta_base_datos = nombre
+		for i in self.CambiosSinGuardar:
+			if i not in lista:
+				lista.append(i)
+			lista += self.CambiosSinGuardar[i]
+
+		Agregar2TXT(self.ruta_historial, lista)
+		self.CambiosSinGuardar = dict()
+
+		# Aquí
 
 	#--------------------------------------------------------------------------------------------
 
@@ -278,9 +228,9 @@ class TodosMisAlumnos:
 
 #		n, nr, c, cu, curso, plantel, horario
 
-		fecha = datetime.today().strftime('%Y-%m-%d %H:%M')
+#		fecha = datetime.today().strftime('%Y-%m-%d %H:%M')
 
-		cambio = f'{fecha}:\n\tSe agregó el alumno {lista[0]}:\n\t\tNúmero de registro: {lista[1]}, Carrera: {lista[2]}, Centro universitario: {lista[3]}, Curso: {lista[4]}, Plantel: {lista[5]}, Horario: {lista[6]}'
+		cambio = f'\tSe agregó el alumno {lista[0]}:\n\t\tNúmero de registro: {lista[1]}, Carrera: {lista[2]}, Centro universitario: {lista[3]}, Curso: {lista[4]}, Plantel: {lista[5]}, Horario: {lista[6]}'
 
 		self.lista.append(Alumno(*lista))
 		self.Cambios_realizados(cambio)
@@ -290,11 +240,13 @@ class TodosMisAlumnos:
 
 	def RmAlumno(self,indice):
 
+		''' Eliminar alumno '''
+
 		self.lista[indice].DiccAlumno()
 		d = self.lista[indice].datos
 
-		fecha = datetime.today().strftime('%Y-%m-%d %H:%M')
-		cambio= f'{fecha}:\n\tSe eliminó al alumno {d["Nombre"]}:\n\t\t'
+#		fecha = datetime.today().strftime('%Y-%m-%d %H:%M')
+		cambio= f'\tSe eliminó al alumno {d["Nombre"]}:\n\t\t'
 		for i in d:
 			if i == "Nombre" or i == "¿PDF entregado?":
 				continue
@@ -319,14 +271,13 @@ class TodosMisAlumnos:
 			os.mkdir(self.ruta_pdf)
 			PDFs = os.listdir(self.ruta_pdf)
 
-		for PDF in PDFs:
-			ruta1 = self.ruta_pdf + "/" + PDF
+		control = [datetime.today().strftime('%Y-%m-%d %H:%M'), "\tArchivos desplazados:"]
 
-			try:
-				os.listdir(ruta1)
+		for PDF in PDFs:
+			ruta1 = os.path.join(self.ruta_pdf, PDF)
+
+			if os.path.isdir(ruta1):
 				continue
-			except NotADirectoryError:
-				pass
 
 			nombre = quitaracentos(PDF.replace(".pdf",""))
 
@@ -342,9 +293,9 @@ class TodosMisAlumnos:
 					print("\nArchivos desplazados:")
 					print(f'{PDF} --> {nueva_ruta}/\n')
 				else:
-					fecha = datetime.today().strftime('%Y-%m-%d %H:%M')
-					mensaje = f'{fecha}:\n\tArchivos desplazados:\n\t\t{PDF} --> {nueva_ruta}/'
-					self.Eventos_control(mensaje)
+					mensaje = f'\t\t{PDF} --> {nueva_ruta}/'
+					control.append(mensaje)
+
 
 				try:
 					os.rename(ruta1, os.path.join(self.ruta_pdf, nueva_ruta, PDF))
@@ -354,6 +305,9 @@ class TodosMisAlumnos:
 				except FileExistsError:
 					print("No sé que pasa")
 
+		if len(control) > 2:
+			mensaje = "\n".join(control)
+			self.Eventos_control(mensaje)
 
 		self.EntregarPDF()
 
@@ -414,200 +368,8 @@ class TodosMisAlumnos:
 
 			print("\n", file=salida)
 
-	#--------------------------------------------------------------------------------------------
-
-	def EntregarPDF(self):
-
-		''' Revisa la base de PDFs para verificar si cada alumno entregó o no su archivo PDF '''
-
-		try:
-			cursos = os.listdir(self.ruta_pdf)
-		except FileNotFoundError:
-			os.mkdir(self.ruta_pdf)
-			cursos = os.listdir(self.ruta_pdf)
-
-		entregado = dict()
-
-		for curso in cursos:
-
-			try:
-				PDFs = os.listdir( os.path.join(self.ruta_pdf, curso))
-			except NotADirectoryError:
-				continue
-
-			#datos_curso = curso.split("_")
-
-			for PDF in PDFs:
-
-				rutaPDF = os.path.join(self.ruta_pdf, curso, PDF)
-				PDF = quitaracentos(PDF)
-
-				if "pdf" not in PDF.split("."):
-					continue
-
-				entregado[PDF.replace(".pdf","")] = rutaPDF
-
-		for alumno in self.lista:
-			alumno.ReiniciarPDFs()
-
-		for alumno in self.lista:
-			nombre = alumno.comparar_nombre
-
-			if nombre in entregado:
-				alumno.NR_entregado = "Sí"
-				alumno.RutaPDF = entregado[nombre]
-			else:
-				alumno.NR_entregado = "*No*"
 
 	#--------------------------------------------------------------------------------------------
-
-	def ReescribirBaseDatos(self, Consola = True): # Proxima a borrar
-
-		''' Reescribe la base de datos principal. Lo anterior se perderá (por ahora) '''
-
-		Salones = dict()
-		rmtree(self.ruta_base_datos)
-
-		for alumno in self.lista:
-			directorio = os.path.join(self.ruta_base_datos, alumno.plantel, alumno.curso)
-			Salon_actual = os.path.join(directorio, f'[alumno.horario].txt')
-
-			try:
-				os.listdir(directorio)
-			except FileNotFoundError:
-				os.makedirs(directorio, exist_ok = True)
-
-			if Salon_actual not in Salones:
-				Salones[Salon_actual] = dict()
-
-			datos_alumno = (alumno.nombre,alumno.nRegistro,alumno.carrera,alumno.CU)
-			Salones[Salon_actual][alumno.comparar_nombre] = datos_alumno
-
-		for salon in Salones:
-			nombres_ordenados = sorted(Salones[salon])
-
-			with open(salon,"w") as salida:
-				for nombre in nombres_ordenados:
-					print("\t&\t".join(Salones[salon][nombre]), file=salida )
-
-		self.add_cHistorial()
-		self.Cambios_base(cargar = True)
-
-		if Consola:
-			print("\n\t*** La base de datos de alumnos, ha sido actualizada ***")
-
-	#--------------------------------------------------------------------------------------------
-
-	def EditarDatosAlumnos(self):
-
-		''' Menú para editar alumnos desde terminal '''
-
-		print("\n\tBienvenidos al menú de edición\n")
-		print('''
-	En este menú solo puedes editar tres datos de los alumnos: Num.registro, carrera o
-	Centro Universitario: para editar cada una ingresa, respectivamente, nr, c o cu al inicio
-	de la linea de comando. Seguido del término de búsqueda (nombre o apellido) para el
-	alumno, y luego el nuevo dato. Todo separado por comas. Ejemplo:
-
-		c, Lopez Urquidi, Turismo
-
-	Esto cambiará la carrera de un alumno con apellido Lopez Urquidi a Turismo. Si hay más
-	coíncidencias se desplegará un menú para elegir. Nota: Los acentos y mayúsculas no infieren
-	en la búsqueda del nombre del alumno, por lo demás tiene que haber una coincidencia
-	perfecta.
-
-	Para salir, escribe exit. Si fuerzas el cierre, los cambios no se guardarán. Para guardar
-	sin salir, escribe actualizar.
-
-		''')
-
-		self.operadores = ["nr","c","cu"]
-		self.consolaEditar()
-		self.GenerarListas()
-		self.UsedData()
-
-	#--------------------------------------------------------------------------------------------
-
-	def consolaEditar(self): # Proxima a borrar
-
-		''' Gestor de edición para terminal '''
-
-		opcion = [""]
-
-		while opcion[0] != "exit":
-			opcion = input("\t>>> ").split(",")
-
-			try:
-				opcion[0],opcion[1],opcion[2] = procesar(opcion[0]),procesar(opcion[1]),QuitarMEspacios(opcion[2])
-			except IndexError:
-				procesar(opcion[0])
-
-			try:
-				if opcion[2].strip() == "*":
-					opcion[2] = QuitarMEspacios(input("\t\tIngresa el nuevo dato>>> "))
-			except IndexError:
-				pass
-
-			if opcion[0] == "exit":
-				self.ReescribirBaseDatos()
-			elif opcion[0] == "actualizar":
-				self.ReescribirBaseDatos()
-				print()
-			elif len(opcion) < 3:
-				print("\tERROR. Falta entradas, o no se está usando coma para separar.")
-			elif len(opcion) > 3:
-				print("\tERROR. Se ingresó más de una entrada.")
-			elif opcion[0].strip() not in self.operadores:
-				print("\tERROR. No se encontró el dato a editar. Ingresa nr, c o cu al inicio de la linea.")
-			else:
-				self.MotorEditar(opcion)
-
-		print()
-
-	#--------------------------------------------------------------------------------------------
-
-	def consolaEditar_GUI(self,cadena,funcion): # Proxima a borrar
-
-		''' Gestor de edición desde pestaña de consola de la GUI. Incompleta '''
-
-		self.operadores = ["nr","c","cu"]
-
-		opcion = cadena.split(",")
-
-		try:
-			opcion[0],opcion[1],opcion[2] = procesar(opcion[0]),procesar(opcion[1]),QuitarMEspacios(opcion[2])
-		except IndexError:
-			procesar(opcion[0])
-
-		if opcion[0] == "actualizar":
-			self.ReescribirBaseDatos()
-			funcion("Base de datos Actualizada")
-		elif len(opcion) < 3:
-			funcion("ERROR. Falta entradas, o no se está usando coma para separar.")
-		elif len(opcion) > 3:
-			funcion("ERROR. Se ingresó más de una entrada.")
-		elif opcion[0].strip() not in self.operadores:
-			funcion("ERROR. No se encontró el dato a editar. Ingresa nr, c o cu al inicio de la linea.")
-		else:
-			self.MotorEditar(opcion)
-	#--------------------------------------------------------------------------------------------
-
-	def MotorEditar(self, opcion):
-
-		''' Motor para edición de datos de alumnos para terminal '''
-
-		if opcion[0].strip() == "nr":
-			dato = "Número de registro"
-		elif opcion[0].strip() == "c":
-			dato = "Carrera"
-		elif opcion[0].strip() == "cu":
-			dato = "Centro Universitario"
-
-		indice = bq.buscar(opcion[1],self.lista)
-
-		if indice != "Abortar":
-#			self.lista[indice].CambiarDato(dato, opcion[2].strip())
-			self.MotorEditar_GUI(indice,dato, opcion[2].strip())
 
 	def MotorEditar_GUI(self,indice,dato,nuevo):
 
@@ -615,9 +377,9 @@ class TodosMisAlumnos:
 
 		self.lista[indice].DiccAlumno()
 		viejo = self.lista[indice].datos[dato]
-		fecha = datetime.today().strftime('%Y-%m-%d %H:%M')
+#		fecha = datetime.today().strftime('%Y-%m-%d %H:%M')
 
-		cambio = f'{fecha}:\n\tCambio en {self.lista[indice].nombre} del plantel {self.lista[indice].plantel}, curso {self.lista[indice].curso}, horario {self.lista[indice].horario}:\n\t\t Cambió {dato}: {viejo} --> {nuevo}'
+		cambio = f'\tCambio en {self.lista[indice].nombre} del plantel {self.lista[indice].plantel}, curso {self.lista[indice].curso}, horario {self.lista[indice].horario}:\n\t\t Cambió {dato}: {viejo} --> {nuevo}'
 
 		self.lista[indice].CambiarDato(dato,nuevo)
 		self.Cambios_realizados(cambio)
@@ -626,44 +388,9 @@ class TodosMisAlumnos:
 
 	#--------------------------------------------------------------------------------------------
 
-	def BuscarAlumno(self):
-
-		''' Buscar a un alumno por nombre o apellido. Para terminal '''
-
-		print("\n\tAquí puedes buscar a un alumno por nombre o apellido.")
-		print("\tSe desplegaran los datos completos en pantalla. Para terminar escribe exit.\n")
-
-		opcion = ""
-
-		while opcion != "exit":
-			opcion = input("\tBuscar>> ")
-
-			if opcion == "Edicion":
-				self.EditarDatosAlumnos()
-				continue
-
-			indice = bq.buscar(procesar(opcion),self.lista)
-
-			if indice == "Abortar":
-				continue
-
-			print("\n\t**Datos Generales**")
-			print("\tNombre: " + self.lista[indice].nombre)
-			print("\tNúmero de registro: " + self.lista[indice].nRegistro)
-			print("\tCarrera: " + self.lista[indice].carrera)
-			print("\tCentro Universitario: " + self.lista[indice].CU)
-			print("\t**Datos Lumiere**")
-			print("\tPlantel: " + self.lista[indice].plantel + ", Curso: " + self.lista[indice].curso, end="")
-			print(", Horario: " + self.lista[indice].horario)
-			print("\t¿PDF enviado?: " + self.lista[indice].NR_entregado)
-			print()
-
-			self.AbrirPDF(indice)
-
 	def Buscar_(self,cadena):
 		indice = bq.buscar_GUI(procesar(cadena),self.lista)
-#		if indice == "Abortar":
-#			continue
+
 		return indice
 
 	#--------------------------------------------------------------------------------------------
@@ -693,64 +420,8 @@ class TodosMisAlumnos:
 		return self.estructuraArbol
 
 
-	#--------------------------------------------------------------------------------------------
-
-	def AbrirPDFmenu(self):
-
-		''' Aquí puedes hacer uns búsqueda para abrir el PDF correspondiente a la busqueda del alumno.
-			Para terminal '''
-
-		print("\n\tAquí puedes hacer uns búsqueda para abrir el PDF correspondiente al")
-		print("\tnúméro de registro del alumno si es que este ya lo entregó. Busca por")
-		print("\tnombre o apellido. Para salir escribe exit.\n")
-
-		opcion = ""
-
-		while opcion != "exit":
-			opcion = input("\tBuscar>> ")
-
-			indice = bq.buscar(procesar(opcion),self.lista)
-
-			if indice == "Abortar":
-				continue
-			elif self.lista[indice].RutaPDF == "Sin ruta":
-				print("\n\tEste alumno no ha entregado su PDF\n")
-				continue
-
-			print("\n\t** Abriendo archivo **\n")
-
-			Ruta = "\"" + self.lista[indice].RutaPDF + "\""
-
-			os.system("okular " + Ruta + " >/dev/null 2>&1 &")
-
-			#print(Ruta)
 
 	#--------------------------------------------------------------------------------------------
-
-	def AbrirPDF(self,indice):
-
-		''' Abrir el documento PDF desde la terminal '''
-
-		ruta = self.lista[indice].RutaPDF
-
-		if ruta == "Sin ruta":
-			print()
-			return
-		loop = ""
-
-		while loop == "":
-			opcion = input("\t¿Desea abrir el PDF con el número de registro?(S/N)>>> ").strip().lower()
-
-			if opcion not in ["s","n"]:
-				print("\tOpción inválida")
-				continue
-			else:
-				loop = "s"
-
-			if opcion == "s":
-				print("\n\t\t** Abriendo archivo **\n")
-				Abrete(ruta)
-
 
 	def AbrirPDF_GUI(self,indice):
 
@@ -840,18 +511,22 @@ class TodosMisAlumnos:
 			cu = alumno["Centro Universitario"]
 			curso,plantel,horario = alumno["Curso"],alumno["Plantel"],alumno["Horario"]
 
-			self.lista.append(Alumno(n,nr,c,cu,curso,plantel,horario))
+#			self.lista.append(Alumno(n,nr,c,cu,curso,plantel,horario))
+
+			self.addAlumno([n, nr, c, cu, curso, plantel, horario])
 
 
-		fecha = datetime.today().strftime('%Y-%m-%d %H:%M')
-		cambio = f'{fecha}:\n\tEl archivo {archivo} fue cargado. Mire el contenido para más información'
-		self.Cambios_realizados(cambio)
-		self.UsedData()
+#		fecha = datetime.today().strftime('%Y-%m-%d %H:%M')
+#		cambio = f'{fecha}:\n\tEl archivo {archivo} fue cargado. Mire el contenido para más información'
+#		self.Cambios_realizados(cambio)
+#		self.UsedData()
 
 	#------------- Importar CSV ---------------------------------------------------------------
 
 
 	def ImportarCSV(self, archivo, datos_curso):
+
+		''' Importar datos desde un archivo CSV '''
 
 		with open(archivo, newline="") as entrada:
 			lector = csv.reader(entrada)
@@ -861,16 +536,19 @@ class TodosMisAlumnos:
 					continue
 
 				newRow = row + datos_curso
-				self.lista.append(Alumno(*newRow))
+#				self.lista.append(Alumno(*newRow))
+				self.AddAlumno(newRow)
 
-		fecha = datetime.today().strftime('%Y-%m-%d %H:%M')
-		cambio = f'{fecha}:\n\tEl archivo {archivo} fue cargado. Mire el contenido para más información'
-		self.Cambios_realizados(cambio)
-		self.UsedData()
+#		fecha = datetime.today().strftime('%Y-%m-%d %H:%M')
+#		cambio = f'{fecha}:\n\tEl archivo {archivo} fue cargado. Mire el contenido para más información'
+#		self.Cambios_realizados(cambio)
+#		self.UsedData()
 
 	#------------- Exportar CSV ---------------------------------------------------------------
 
 	def ExportarCSV(self, ruta_archivo, *indices):
+
+		''' Crea un archivo CSV con los alumnos seleccionados '''
 
 		with open(ruta_archivo, "w", newline="") as salida:
 			writer = csv.writer(salida)
@@ -882,6 +560,8 @@ class TodosMisAlumnos:
 	#----------- Exportar algunos alumnosa JSON ------------------------------------------------
 
 	def ExportarAulaJSON(self, ruta_archivo, *indices):
+
+		''' Crea un archivo CSV con los alumnos seleccionados '''
 
 		salida = {"Alumnos" : []}
 
@@ -896,12 +576,11 @@ class TodosMisAlumnos:
 			print(salida, end="", file=archivo)
 
 
-
-
-
 	#-------- Leer dictamen para conocer admitidos -----------------------------------------
 
 	def LeerDictamen(self, archivo):
+
+		''' Lee el dictamen de admitidos UDG en formato PDF para verificar admitidos '''
 
 		cadena = PDF2Cadena(archivo)
 
@@ -942,9 +621,12 @@ class Alumno:
 		self.plantel = plantel
 		self.horario = horario
 		self.NR_entregado = "No data"
+		self.comparar_nombre = self.nombre
+		self.bandera = ""
 		self.GenerarComparar()
 		self.RutaPDF = "Sin ruta"
 		self.admitido = "No data"
+
 
 		self.ValoresVacios()
 		self.DiccAlumno()
