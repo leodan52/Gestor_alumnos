@@ -398,6 +398,7 @@ class TodosMisAlumnos:
 	def GenerarArbol(self):
 
 		indice = 0
+		self.estructuraArbol = dict()
 
 		for i in self.lista:
 			plantel, curso, horario = i.getDatosSalon()
