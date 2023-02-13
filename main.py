@@ -507,6 +507,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 		''' Genera un diccionario para auxiliar la organización en formato árbo en pantalla '''
 
 		arbol = self.Listas.getArbol()
+		self.ArbolListas.clear()
 
 		if len(arbol) == 0:
 			return
