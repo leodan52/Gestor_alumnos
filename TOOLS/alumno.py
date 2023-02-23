@@ -218,7 +218,6 @@ class TodosMisAlumnos:
 		Agregar2TXT(self.ruta_historial, lista)
 		self.CambiosSinGuardar = dict()
 
-		# Aquí
 
 	#--------------------------------------------------------------------------------------------
 
@@ -332,22 +331,33 @@ class TodosMisAlumnos:
 	#--------------------------------------------------------------------------------------------
 
 	def GenerarListas(self, archivo = "Listas completas.txt"):
-		#print("Has invocado al héroe japonés")
 
-		''' Genera listas tabuladas de los alumnos divididos por salones '''
+		 ''' Genera listas tabuladas de los alumnos divididos por salones '''
+
+		#print("Has invocado al héroe japonés")
 
 		Salones = dict()
 
-		for alumno in self.lista:
+		for plantel in self.Data["Plantel"]:
+			for curso in self.Data["Curso"]:
+				for horario in self.Data["Horario"]:
 
-			Salon_actual = f'\n\n* Lista del plantel {alumno.plantel}, curso {alumno.curso} del horario {alumno.horario} *\n\n'
+					cadena_comparar = f'{plantel}-{curso}-{horario}'
 
-			if Salon_actual not in Salones:
-				Salones[Salon_actual] = []
+					salon = filter(lambda alumno: cadena_comparar == f'{alumno.plantel}-{alumno.curso}-{alumno.horario}' , self.lista)
+					salon = list(salon)
 
-			datos_alumno = [alumno.nombre,alumno.nRegistro,alumno.carrera,alumno.CU,alumno.NR_entregado, alumno.admitido]
+					if salon == []:
+						continue
+					else:
+						salon.sort()
 
-			Salones[Salon_actual].append(datos_alumno)
+					Salon_actual = f'\n\n** Lista del plantel *{plantel}*, curso *{curso}* del horario *{horario}* **\n\n'
+					Salones[Salon_actual] = []
+
+					for alumno in salon:
+						datos_alumno = [alumno.nombre,alumno.nRegistro,alumno.carrera,alumno.CU,alumno.NR_entregado, alumno.admitido]
+						Salones[Salon_actual].append(datos_alumno)
 
 		titulos = ["Nombre","Num. de registro", "Carrera", "Centro", "PDF enviado", "¿Admitido?"]
 
@@ -367,7 +377,6 @@ class TodosMisAlumnos:
 
 
 			print("\n", file=salida)
-
 
 	#--------------------------------------------------------------------------------------------
 
@@ -631,6 +640,11 @@ class Alumno:
 
 		self.ValoresVacios()
 		self.DiccAlumno()
+
+	#--------------------------------------------------------------------------------------------
+
+	def __lt__(self, other):
+		return self.nombre < other.nombre
 
 	#--------------------------------------------------------------------------------------------
 
