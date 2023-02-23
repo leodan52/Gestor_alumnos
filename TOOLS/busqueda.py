@@ -91,7 +91,7 @@ def buscar(entrada,Lista):
 
 	return coincidencias[opciones[opcion]]
 
-def buscar_GUI(entrada,Lista):
+def buscar_GUI(entrada, Lista):
 	# La lista es la lista de alumnos, clases de alumnos
 	# Entrada es la busqueda ingreada por el usuario
 
