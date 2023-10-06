@@ -1,4 +1,4 @@
-# Descripcion
+# Por: Leonardo D. Santiago
 
 from UI.Ventana_madre import *
 from UI.Ventana_coincidencias import *
@@ -134,7 +134,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 		self.Ruta_Base = rutas["Base_datos"]
 		self.Ruta_PDF = rutas["Base_PDF"]
 
-	#------- Exportar los arlumnos desde la base de datos-------------------------------------------
+	#------- Exportar los alumnos desde la base de datos-------------------------------------------
 
 	def Extraer_(self):
 
@@ -157,9 +157,14 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 	#........ Actualizar completador -----------------------------------------------------------------
 
 	def ActualizarCompletador(self):
-		self.PalabrasClaves = QCompleter(self.Listas.ClavesBusqueda)
-		self.PalabrasClaves.setCaseSensitivity(QtCore.Qt.CaseInsensitive)
-		self.CuadroBuscar.setCompleter(self.PalabrasClaves)
+
+		nombres = list(map(lambda a: a.nombre, self.Listas.lista))
+
+		PalabrasClaves = QCompleter(nombres)
+		PalabrasClaves.setCaseSensitivity(QtCore.Qt.CaseInsensitive)
+		PalabrasClaves.setFilterMode(QtCore.Qt.MatchContains)
+		self.CuadroBuscar.setCompleter(PalabrasClaves)
+
 
 	#----- Desplegar ventana alerta ---------------------------------------------------------
 
@@ -214,7 +219,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 		''' Usa el método de la clase TodosMisAlumnos para generar listas tabuladas de los datos
 			de los alumnos proporcionados por la base de datos '''
 
-		# Por alguna razon que desconozco, usar el método directo de TodosMisAlumnos GenerarListas()
+		# Por alguna razón que desconozco, usar el método directo de TodosMisAlumnos GenerarListas()
 		# en el Qaction generaba un problema: Al Importar_(), ya no funcionaba nuevamente
 
 		ruta = extraer_historial(self.Ruta_Historial)["Salida_listas"]
@@ -227,7 +232,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 			return
 
 		ruta = os.path.dirname(archivo)
-		r_historial("Salida_listas",ruta,self.Ruta_Historial)
+		historial_rutas("Salida_listas",ruta,self.Ruta_Historial)
 
 		self.Listas.GenerarListas(archivo)
 		self.MensajeUser(f'Las listas completas han sido generadas en {archivo}')
@@ -245,7 +250,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 		if archivo.strip() == "":
 			return
 
-		r_historial("Entrada_JSON",archivo,self.Ruta_Historial)
+		historial_rutas("Entrada_JSON",archivo,self.Ruta_Historial)
 
 		self.Listas.ImportJSON(archivo)
 		self.ActualizarCompletador()
@@ -268,7 +273,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 			return
 
 		ruta = os.path.dirname(archivo)
-		r_historial("Salida_JSON",ruta,self.Ruta_Historial)
+		historial_rutas("Salida_JSON",ruta,self.Ruta_Historial)
 
 		self.Listas.Todos2JSON(archivo)
 		self.MensajeUser(f'Datos de alumnos exportados a {archivo}')
@@ -351,18 +356,18 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 		self.MensajeUser(f'Un total de {self.Listas.num_Admitidos} fueron admitidos.')
 
 		ruta = os.path.dirname(archivo)
-		r_historial("Dictamen", ruta, self.Ruta_Historial)
+		historial_rutas("Dictamen", ruta, self.Ruta_Historial)
 
 
 	#***********************************************************************************
 	#*		Botones de la pestaña buscar
 	#***********************************************************************************
 
-	#--------- Función busqueda --------------------------------------------------------------------
+	#--------- Función búsqueda --------------------------------------------------------------------
 
 	def Buscar(self):
 
-		''' Busca mediente nombre o apellido un alumno'''
+		''' Busca mediante nombre o apellido un alumno'''
 
 		busqueda = self.CuadroBuscar.text().strip()	 	# Recuperamos la cadena escrita en el cuadro de texto
 		if busqueda == "":
@@ -384,7 +389,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 		self.Ventana_Elegir.show() 						# Si hay mas de una coincidencia se despliega
 														# otra ventana para elegir
 
-	#------ Funcion para agregar alumno --------------------------------------------------------
+	#------ Función para agregar alumno --------------------------------------------------------
 
 	def AgregarBoton(self):
 
@@ -406,11 +411,11 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
 		self.Desplegar_alumnos(self.indice)
 
-	#---- Funcion para editar en pestaña busqueda-----------------------------------------------
+	#---- Función para editar en pestaña busqueda-----------------------------------------------
 
 	def EditarBoton(self):
 
-		''' Elige algun dato del alumno para editarlo'''
+		''' Elige algún dato del alumno para editarlo'''
 
 		index = self.Mostrar.currentRow()
 		try:
@@ -436,7 +441,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 		self.Desplegar_alumnos(self.indice)
 		self.ActualizarCompletador()
 
-	# ----- Funcion para boton Abrir PDF -------------------------------------------------------
+	# ----- Función para botón Abrir PDF -------------------------------------------------------
 
 	def AbrirPDFBoton(self):
 
@@ -447,11 +452,11 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 		except AttributeError:
 			self.MensajeUser("No hay PDF disponible")
 
-	#----- Funcion eliminar alumno --------------------------------------------------------------
+	#----- Función eliminar alumno --------------------------------------------------------------
 
 	def EliminarAlumno(self, f = None):
 
-		''' Funcion para preguntar a usuario si está seguro de eliminar alumno '''
+		''' Función para preguntar a usuario si está seguro de eliminar alumno '''
 
 		nombre = self.Listas.lista[self.indice].nombre
 
@@ -504,7 +509,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
 	def EscribirArbol(self):
 
-		''' Genera un diccionario para auxiliar la organización en formato árbo en pantalla '''
+		''' Genera un diccionario para auxiliar la organización en formato árbol en pantalla '''
 
 		arbol = self.Listas.getArbol()
 		self.ArbolListas.clear()
@@ -589,7 +594,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 			return
 
 		path_archivo = os.path.dirname(archivo)
-		r_historial("GuardaSalonArchivo", path_archivo, self.Ruta_Historial)
+		historial_rutas("GuardaSalonArchivo", path_archivo, self.Ruta_Historial)
 
 		indices = []
 
@@ -650,7 +655,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 		self.Desplegar_alumnos(indice)
 
 	#********************************************************************************
-	#*   Habilitar botones o deshabilitar segun sean necesarios o no
+	#*   Habilitar botones o deshabilitar según sean necesarios
 	#********************************************************************************
 
 	def BotonesDes(self):
@@ -795,16 +800,16 @@ class V_Coincidencias(QtWidgets.QDialog, Ui_Ventana_Coincidencias):
 		self.buttonBox.accepted.connect(self.Aceptar)
 		self.ListaCoincidencias.itemDoubleClicked.connect(self.buttonBox.accepted)
 
-	#----- Funcion para imprimir las coincidencias y que el usuario eliga la requerida ----------------
+	#----- Funcion para imprimir las coincidencias y que el usuario elija la requerida ----------------
 
 	def Imprimir(self):
 
-		# Imprime los rsultados en pantalla
+		# Imprime los resultados en pantalla
 
 		for i in self.resultados:
 			self.ListaCoincidencias.addItem(i)
 
-	#------Funcion vinculada al boton Ok, para activar la funcion --------------------------------------
+	#------Funcion vinculada al botón Ok, para activar la funcion --------------------------------------
 
 	def Aceptar(self):
 
@@ -989,8 +994,8 @@ class V_EditarDirectorios(QtWidgets.QDialog, Ui_Ventana_Directorios):
 		base = self.Entrada_BaseDatos.text()
 		base_pdf = self.Entrada_BasePDF.text()
 
-		r_historial("Base_datos",base,self.Ruta)
-		r_historial("Base_PDF",base_pdf,self.Ruta)
+		historial_rutas("Base_datos",base,self.Ruta)
+		historial_rutas("Base_PDF",base_pdf,self.Ruta)
 
 		self.F()
 		self.F_m(f'Las bases de datos han sido cambiadas. No olvides importar.')
@@ -1102,7 +1107,7 @@ class V_AgregarCSV(QtWidgets.QDialog, Ui_Ventana_CargarCSV):
 		self.entradaLineas.setPlainText(texto)
 
 		ruta = os.path.dirname(archivo)
-		r_historial("V_AgregarCSV-CargarCSV", ruta, self.historial_ruta)
+		historial_rutas("V_AgregarCSV-CargarCSV", ruta, self.historial_ruta)
 
 	def AgregarABase(self):
 		curso = V_AgregarCSV.CrearNombresporDefecto(self.entrada_Curso.text())
