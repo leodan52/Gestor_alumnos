@@ -6,6 +6,7 @@ from tabulate import tabulate as tabla
 import TOOLS.busqueda as bq
 from shutil import rmtree
 from datetime import datetime
+import re
 
 
 #*-------------------------------------------------------------------------------------------*
@@ -189,7 +190,7 @@ class TodosMisAlumnos:
 
 	def Eventos_control(self,cadena):
 
-		''' Hace seguimiento de eventos relevantes para la gestion '''
+		''' Hace seguimiento de eventos relevantes para la gestión '''
 
 		Agregar2TXT(self.ruta_historial, [cadena])
 
@@ -265,44 +266,52 @@ class TodosMisAlumnos:
 			El PDF debe renombrarse usado el nombre del alumno '''
 
 		try:
-			PDFs = os.listdir(self.ruta_pdf)
+			PDFs = []
+			for ruta, _, archivos in os.walk(self.ruta_pdf):
+				aux = list(map(lambda x: os.path.join(ruta, x), archivos))
+				PDFs = PDFs + aux
 		except FileNotFoundError:
 			os.mkdir(self.ruta_pdf)
-			PDFs = os.listdir(self.ruta_pdf)
+			PDFs = []
 
 		control = [datetime.today().strftime('%Y-%m-%d %H:%M'), "\tArchivos desplazados:"]
+		PDFs = list(filter(lambda x: os.path.isfile(x) and x.endswith('.pdf'), PDFs))
 
 		for PDF in PDFs:
-			ruta1 = os.path.join(self.ruta_pdf, PDF)
+			pdf_string = PDF2Cadena(PDF)
 
-			if os.path.isdir(ruta1):
+			alumnos = list(filter(lambda x: TodosMisAlumnos.__buscarString(x.comparar_nombre, pdf_string), self.lista))
+
+			if len(alumnos) > 1:
+				print(f'Warning: Hay {len(alumnos)} alumnos que coinciden con el PDF.')
+				print('\t', alumnos)
+				print('Se procede con el primero.')
+			elif len(alumnos) == 0:
 				continue
 
-			nombre = quitaracentos(PDF.replace(".pdf",""))
+			alumno = alumnos[0]
 
-			for alumno in self.lista:
-				nombre2 = alumno.comparar_nombre
+			curso = f'{alumno.plantel}_{alumno.curso}_{alumno.horario}'
+			nombre_alumno = alumno.comparar_nombre.title() + alumno.bandera + '.pdf'
+			nueva_ruta = os.path.join(self.ruta_pdf, curso, nombre_alumno)
 
-				if nombre != nombre2:
-					continue
+			if PDF == nueva_ruta:
+				continue
 
-				nueva_ruta = f'{alumno.plantel}_{alumno.curso}_{alumno.horario}'
+			try:
+				os.rename(PDF, nueva_ruta)
+			except FileNotFoundError:
+				os.mkdir(os.path.dirname(nueva_ruta))
+				os.rename(PDF, nueva_ruta)
+			except FileExistsError:
+				raise IOError("No sé que pasa")
 
-				if Consola:
-					print("\nArchivos desplazados:")
-					print(f'{PDF} --> {nueva_ruta}/\n')
-				else:
-					mensaje = f'\t\t{PDF} --> {nueva_ruta}/'
-					control.append(mensaje)
-
-
-				try:
-					os.rename(ruta1, os.path.join(self.ruta_pdf, nueva_ruta, PDF))
-				except FileNotFoundError:
-					os.mkdir( os.path.join(self.ruta_pdf, nueva_ruta) )
-					os.rename(ruta1, os.path.join(self.ruta_pdf, nueva_ruta, PDF) )
-				except FileExistsError:
-					print("No sé que pasa")
+			if Consola:
+				print("\nArchivos desplazados:")
+				print(f'{PDF} --> {nueva_ruta}/\n')
+			else:
+				mensaje = f'\t\t{PDF} --> {nueva_ruta}/'
+				control.append(mensaje)
 
 		if len(control) > 2:
 			mensaje = "\n".join(control)
@@ -310,14 +319,24 @@ class TodosMisAlumnos:
 
 		self.EntregarPDF()
 
+	@staticmethod
+	def __buscarString(string, pdf_string):
+		string_ = string.split(' ')
+
+		check = list(map(lambda x: x in pdf_string, string_))
+
+		return all(check)
+
+
 	#--------------------------------------------------------------------------------------------
 
 	def EscanearPDFs(self):
 
 		Error = dict()
+		indice = 0
 
 		for alumno in self.lista:
-			alumno.ConfirmarPDF()
+			nuevo = alumno.ConfirmarPDF()
 			if hasattr(alumno, "CoinPorcent"):
 				if alumno.CoinPorcent < 50.0:
 					Error[alumno.nombre] = (alumno.RutaPDF, "Archivo PDF")
@@ -326,13 +345,18 @@ class TodosMisAlumnos:
 				elif alumno.CoinNum == 0.0:
 					Error[alumno.nombre] = (alumno.RutaPDF, "Número de registro")
 
+			if nuevo != None:
+				self.MotorEditar_GUI(indice, "Número de registro", nuevo)
+
+			indice += 1
+
 		self.ErrorPDFs = Error
 
 	#--------------------------------------------------------------------------------------------
 
 	def GenerarListas(self, archivo = "Listas completas.txt"):
 
-		 ''' Genera listas tabuladas de los alumnos divididos por salones '''
+		''' Genera listas tabuladas de los alumnos divididos por salones '''
 
 		#print("Has invocado al héroe japonés")
 
@@ -441,7 +465,7 @@ class TodosMisAlumnos:
 
 		if ruta == "Sin ruta":
 			return
-		Abrete(ruta)
+		abrete(ruta)
 
 	#------------------JSON Exportar -------------------------------------------------------------
 
@@ -483,9 +507,7 @@ class TodosMisAlumnos:
 			todos["% de registro entregados"] = "No data"
 
 
-		cadena = json.dumps(todos,ensure_ascii=False)
-
-		cadena = PrepararJSON(cadena)
+		cadena = json.dumps(todos, ensure_ascii=False, indent = 4)
 
 		if salida_file:
 			with open(archivo, "w") as salida:
@@ -523,7 +545,9 @@ class TodosMisAlumnos:
 
 #			self.lista.append(Alumno(n,nr,c,cu,curso,plantel,horario))
 
-			self.addAlumno([n, nr, c, cu, curso, plantel, horario])
+			argumento = [n, nr, c, cu, curso, plantel, horario]
+
+			self.AddAlumno(argumento)
 
 
 #		fecha = datetime.today().strftime('%Y-%m-%d %H:%M')
@@ -567,7 +591,7 @@ class TodosMisAlumnos:
 				alumno = self.lista[i].getDatosCSV()
 				writer.writerow(alumno)
 
-	#----------- Exportar algunos alumnosa JSON ------------------------------------------------
+	#----------- Exportar algunos alumnos JSON ------------------------------------------------
 
 	def ExportarAulaJSON(self, ruta_archivo, *indices):
 
@@ -579,8 +603,7 @@ class TodosMisAlumnos:
 			self.lista[i].Alumno2JSON()
 			salida["Alumnos"].append(self.lista[i].datos.copy())
 
-		salida = json.dumps(salida,ensure_ascii=False)
-		salida = PrepararJSON(salida)
+		salida = json.dumps(salida, ensure_ascii=False, indent = 4)
 
 		with open(ruta_archivo, "w") as archivo:
 			print(salida, end="", file=archivo)
@@ -616,7 +639,7 @@ class Alumno:
 		''' Clase alumnos. Contiene la información de un alumnos '''
 
 		# nombre: Nombre del alumno
-		# numRegristro: Proporcionado al hacer tramites UDG
+		# numRegistro: Proporcionado al hacer tramites UDG
 		# carrera: Carrera a aspirar
 		# CU: Centro universitario de la red
 		# Curso: Nombre del curso en Lumiere
@@ -643,8 +666,16 @@ class Alumno:
 
 	#--------------------------------------------------------------------------------------------
 
+	def __repr__(self):
+		representacion = f'< Objeto : Alumno, Nombre: \'{self.nombre}\', Carrera: \'{self.carrera}\', ' + \
+			f'CU: \'{self.CU}\', Lumiere: \'{self.plantel}\' - \'{self.horario}\' - \'{self.curso}\'> '
+
+		return representacion
+
+	#--------------------------------------------------------------------------------------------
+
 	def __lt__(self, other):
-		return self.nombre < other.nombre
+		return self.comparar_nombre < other.comparar_nombre
 
 	#--------------------------------------------------------------------------------------------
 
@@ -708,8 +739,12 @@ class Alumno:
 	def ConfirmarPDF(self):
 		if self.RutaPDF == "Sin ruta":
 			return
-
-		cadena = PDF2Cadena(self.RutaPDF)
+		try:
+			cadena = PDF2Cadena(self.RutaPDF)
+		except fitz.fitz.EmptyFileError:
+			print("\nERROR fitz.fitz.EmptyFileError")
+			print(f'[self.RutaPDF] no es un archivo PDF\n')
+			return
 
 		if cadena == "":
 			self.CoinPorcent = 101
@@ -720,6 +755,22 @@ class Alumno:
 			self.CoinNum = BuscarEnCadena(self.nRegistro, cadena)
 		else:
 			self.CoinNum = -1
+			return self.ExtraerNumRegistro(cadena)
+
+
+	def ExtraerNumRegistro(self, cadena):
+
+		encontrado = re.findall(r'\D\d{7}\D', str(cadena))
+
+		sin_repetidos = []
+
+		for clave in encontrado:
+			if clave[1:-1] not in sin_repetidos:
+				sin_repetidos.append(clave[1:-1])
+
+		if len(sin_repetidos) == 1:
+			return sin_repetidos[0]
+
 
 	#--------------------------------------------------------------------------------------------
 
@@ -727,9 +778,9 @@ class Alumno:
 		if self.nRegistro == "n/a":
 			return
 
-		porc_coicidencia = BuscarEnCadena(self.nRegistro, dictamen)
+		porc_coincidencia = BuscarEnCadena(self.nRegistro, dictamen)
 
-		if porc_coicidencia == 100:
+		if porc_coincidencia == 100:
 			self.admitido = "*Sí*"
 		else:
 			self.admitido = " No"
