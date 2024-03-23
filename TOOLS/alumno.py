@@ -4,10 +4,9 @@ from TOOLS.tools import *
 import json, csv
 from tabulate import tabulate as tabla
 import TOOLS.busqueda as bq
-from shutil import rmtree
+#from shutil import rmtree
 from datetime import datetime
 import re
-
 
 #*-------------------------------------------------------------------------------------------*
 #*------ Clases -----------------------------------------------------------------------------*
@@ -36,8 +35,6 @@ class TodosMisAlumnos:
 		self.Control_version()
 		self.EntregarPDF()
 		self.UsedData()
-
-
 
 	#---------------------------------------------------------------------------------------------
 
@@ -259,8 +256,8 @@ class TodosMisAlumnos:
 		self.UsedData()
 
 	#--------------------------------------------------------------------------------------------
-
-	def organizarPDF(self, Consola = True ):
+	@MensajeClase
+	def organizarPDF(self, Consola = True):
 
 		''' Manipula la base (directorio) que contiene los PDFs y los organiza en directorios por salón.
 			El PDF debe renombrarse usado el nombre del alumno '''
@@ -329,7 +326,7 @@ class TodosMisAlumnos:
 
 
 	#--------------------------------------------------------------------------------------------
-
+	@MensajeClase
 	def EscanearPDFs(self):
 
 		Error = dict()
@@ -353,7 +350,7 @@ class TodosMisAlumnos:
 		self.ErrorPDFs = Error
 
 	#--------------------------------------------------------------------------------------------
-
+	@MensajeClase
 	def GenerarListas(self, archivo = "Listas completas.txt"):
 
 		''' Genera listas tabuladas de los alumnos divididos por salones '''
@@ -453,10 +450,8 @@ class TodosMisAlumnos:
 
 		return self.estructuraArbol
 
-
-
 	#--------------------------------------------------------------------------------------------
-
+	@MensajeClase
 	def AbrirPDF_GUI(self,indice):
 
 		''' Abrir el documento PDF desde el GUI '''
@@ -468,7 +463,7 @@ class TodosMisAlumnos:
 		abrete(ruta)
 
 	#------------------JSON Exportar -------------------------------------------------------------
-
+	@MensajeClase
 	def Todos2JSON(self, archivo = "alumnos.json", salida_file = True):
 
 		''' Exporta los datos de los alumnos en listas a un archivo JSON '''
@@ -516,7 +511,7 @@ class TodosMisAlumnos:
 			return todos
 
 	#-------- Importar JSON -----------------------------------------------------------------
-
+	@MensajeClase
 	def ImportJSON(self, archivo = "alumnos.json", importar = True):
 
 		''' Importa los datos de los alumnos contenidos en un JSON a las listas. Se debe actualizar
@@ -557,7 +552,7 @@ class TodosMisAlumnos:
 
 	#------------- Importar CSV ---------------------------------------------------------------
 
-
+	@MensajeClase
 	def ImportarCSV(self, archivo, datos_curso):
 
 		''' Importar datos desde un archivo CSV '''
@@ -579,7 +574,7 @@ class TodosMisAlumnos:
 #		self.UsedData()
 
 	#------------- Exportar CSV ---------------------------------------------------------------
-
+	@MensajeClase
 	def ExportarCSV(self, ruta_archivo, *indices):
 
 		''' Crea un archivo CSV con los alumnos seleccionados '''
@@ -610,7 +605,7 @@ class TodosMisAlumnos:
 
 
 	#-------- Leer dictamen para conocer admitidos -----------------------------------------
-
+	@MensajeClase
 	def LeerDictamen(self, archivo):
 
 		''' Lee el dictamen de admitidos UDG en formato PDF para verificar admitidos '''
@@ -654,12 +649,9 @@ class Alumno:
 		self.plantel = plantel
 		self.horario = horario
 		self.NR_entregado = "No data"
-		self.comparar_nombre = self.nombre
 		self.bandera = ""
-		self.GenerarComparar()
 		self.RutaPDF = "Sin ruta"
 		self.admitido = "No data"
-
 
 		self.ValoresVacios()
 		self.DiccAlumno()
@@ -676,6 +668,12 @@ class Alumno:
 
 	def __lt__(self, other):
 		return self.comparar_nombre < other.comparar_nombre
+
+	#--------------------------------------------------------------------------------------------
+
+	@property
+	def comparar_nombre(self):
+		return quitaracentos(self.nombre)
 
 	#--------------------------------------------------------------------------------------------
 
@@ -703,11 +701,6 @@ class Alumno:
 
 	#--------------------------------------------------------------------------------------------
 
-	def GenerarComparar(self):
-		self.comparar_nombre = quitaracentos(self.nombre)
-
-	#--------------------------------------------------------------------------------------------
-
 	def CambiarDato(self,dato,nuevo):
 
 		''' Cambiar determinado dato por el alumnos. Si el dato no es un atributo, retornará 0,
@@ -721,7 +714,7 @@ class Alumno:
 			self.CU = nuevo
 		elif dato == "Nombre":
 			self.nombre = nuevo
-			self.GenerarComparar()
+
 		elif dato == "Curso":
 			self.curso = nuevo
 		elif dato == "Plantel":
