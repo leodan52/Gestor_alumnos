@@ -123,9 +123,6 @@ class TodosMisAlumnos:
 				entregado[PDF.replace(".pdf","")] = rutaPDF
 
 		for alumno in self.lista:
-			alumno.ReiniciarPDFs()
-
-		for alumno in self.lista:
 			nombre = alumno.comparar_nombre
 
 			if nombre in entregado:
@@ -239,7 +236,6 @@ class TodosMisAlumnos:
 
 		''' Eliminar alumno '''
 
-		self.lista[indice].DiccAlumno()
 		d = self.lista[indice].datos
 
 #		fecha = datetime.today().strftime('%Y-%m-%d %H:%M')
@@ -333,7 +329,7 @@ class TodosMisAlumnos:
 		indice = 0
 
 		for alumno in self.lista:
-			nuevo = alumno.ConfirmarPDF()
+			nuevo = alumno.ValidarPDF()
 			if hasattr(alumno, "CoinPorcent"):
 				if alumno.CoinPorcent < 50.0:
 					Error[alumno.nombre] = (alumno.RutaPDF, "Archivo PDF")
@@ -405,13 +401,12 @@ class TodosMisAlumnos:
 
 		''' Motor para edición de datos de alumnos para GUI'''
 
-		self.lista[indice].DiccAlumno()
 		viejo = self.lista[indice].datos[dato]
 #		fecha = datetime.today().strftime('%Y-%m-%d %H:%M')
 
 		cambio = f'\tCambio en {self.lista[indice].nombre} del plantel {self.lista[indice].plantel}, curso {self.lista[indice].curso}, horario {self.lista[indice].horario}:\n\t\t Cambió {dato}: {viejo} --> {nuevo}'
 
-		self.lista[indice].CambiarDato(dato,nuevo)
+		self.lista[indice].ActualizarDato(dato,nuevo)
 		self.Cambios_realizados(cambio)
 		self.UsedData()
 
@@ -431,7 +426,7 @@ class TodosMisAlumnos:
 		self.estructuraArbol = dict()
 
 		for i in self.lista:
-			plantel, curso, horario = i.getDatosSalon()
+			plantel, curso, horario = i.DatosSalon
 
 			if plantel not in self.estructuraArbol:
 				self.estructuraArbol[plantel] = dict()
@@ -478,8 +473,7 @@ class TodosMisAlumnos:
 		total_nr = 0
 
 		for i in self.lista:
-			i.Alumno2JSON()
-			todos["Alumnos"].append(i.datos)
+			todos["Alumnos"].append(i.datos_json)
 			total += 1
 
 			if i.datos["Plantel"] not in todos["Planteles"]:
@@ -583,7 +577,7 @@ class TodosMisAlumnos:
 			writer = csv.writer(salida)
 
 			for i in indices:
-				alumno = self.lista[i].getDatosCSV()
+				alumno = self.lista[i].DatosUDG
 				writer.writerow(alumno)
 
 	#----------- Exportar algunos alumnos JSON ------------------------------------------------
@@ -595,8 +589,7 @@ class TodosMisAlumnos:
 		salida = {"Alumnos" : []}
 
 		for i in indices:
-			self.lista[i].Alumno2JSON()
-			salida["Alumnos"].append(self.lista[i].datos.copy())
+			salida["Alumnos"].append(self.lista[i].datos_json)
 
 		salida = json.dumps(salida, ensure_ascii=False, indent = 4)
 
@@ -653,8 +646,7 @@ class Alumno:
 		self.RutaPDF = "Sin ruta"
 		self.admitido = "No data"
 
-		self.ValoresVacios()
-		self.DiccAlumno()
+		self.RellenarValoresVacios()
 
 	#--------------------------------------------------------------------------------------------
 
@@ -677,7 +669,7 @@ class Alumno:
 
 	#--------------------------------------------------------------------------------------------
 
-	def ValoresVacios(self):
+	def RellenarValoresVacios(self):
 
 		aux = [self.nRegistro, self.carrera, self.CU]
 
@@ -695,13 +687,13 @@ class Alumno:
 
 	#--------------------------------------------------------------------------------------------
 
-	def ReiniciarPDFs(self):
+	def ReiniciarInfoPDFs(self):
 		self.NR_entregado = "No data"
 		self.RutaPDF = "Sin ruta"
 
 	#--------------------------------------------------------------------------------------------
 
-	def CambiarDato(self,dato,nuevo):
+	def ActualizarDato(self,dato,nuevo):
 
 		''' Cambiar determinado dato por el alumnos. Si el dato no es un atributo, retornará 0,
 			caso contrario, 1 '''
@@ -724,12 +716,10 @@ class Alumno:
 		else:
 			return 0
 
-		self.DiccAlumno()
-
 		return 1
 	#--------------------------------------------------------------------------------------------
 
-	def ConfirmarPDF(self):
+	def ValidarPDF(self):
 		if self.RutaPDF == "Sin ruta":
 			return
 		try:
@@ -779,18 +769,19 @@ class Alumno:
 			self.admitido = " No"
 	#--------------------------------------------------------------------------------------------
 
-	def getDatosSalon(self):
+	@property
+	def DatosSalon(self):
 		salida = ([
 			self.plantel,
 			self.curso,
 			self.horario
 			])
-
 		return salida
 
 	#--------------------------------------------------------------------------------------------
 
-	def getDatosCSV(self):
+	@property
+	def DatosUDG(self):
 		salida = ([
 			self.nombre,
 			self.nRegistro,
@@ -801,26 +792,30 @@ class Alumno:
 		return salida
 
 	#--------------------------------------------------------------------------------------------
-
-	def DiccAlumno(self):
+	@property
+	def datos(self):
 
 		''' Genera diccionario que contiene la información del alumno '''
 
-		self.datos = ({ "Nombre" : self.nombre, "Número de registro" : self.nRegistro,
-						"Carrera" : self.carrera, "Centro Universitario" : self.CU,
-						"Curso" : self.curso, "Plantel" : self.plantel, "Horario" : self.horario,
-						"¿PDF entregado?" : self.NR_entregado, "¿Admitido?" : self.admitido})
+		datos_ = ({ "Nombre" : self.nombre, "Número de registro" : self.nRegistro,
+					"Carrera" : self.carrera, "Centro Universitario" : self.CU,
+					"Curso" : self.curso, "Plantel" : self.plantel, "Horario" : self.horario,
+					"¿PDF entregado?" : self.NR_entregado, "¿Admitido?" : self.admitido})
 
 		if self.admitido == "No data":
-			self.datos.pop("¿Admitido?")
+			datos_.pop("¿Admitido?")
+
+		return datos_
 
 	#-------------------------------------------------------------------------------------------
-
-	def Alumno2JSON(self):
+	@property
+	def datos_json(self):
 
 		''' Genera diccionario con los datos del alumno como preparación para exportar a JSON '''
 
-		self.datos = ({	"Nombre" : self.nombre, "Número de registro" : self.nRegistro,
-						"Carrera" : self.carrera, "Centro Universitario" : self.CU,
-						"Curso" : self.curso, "Plantel" : self.plantel, "Horario" : self.horario,
-						"¿Admitido?" : self.admitido})
+		datos = ({	"Nombre" : self.nombre, "Número de registro" : self.nRegistro,
+					"Carrera" : self.carrera, "Centro Universitario" : self.CU,
+					"Curso" : self.curso, "Plantel" : self.plantel, "Horario" : self.horario,
+					"¿Admitido?" : self.admitido})
+
+		return datos
