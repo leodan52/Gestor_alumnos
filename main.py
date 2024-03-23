@@ -8,6 +8,7 @@ from UI.Ventana_agregar import *
 from UI.Ventana_directorios import *
 from UI.Ventana_cerrar import *
 from UI.Ventana_cargarCSV import *
+
 from TOOLS.alumno import *
 from TOOLS.objetos import *
 from PyQt5.QtWidgets import QFileDialog, QCompleter
