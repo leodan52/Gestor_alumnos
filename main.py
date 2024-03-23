@@ -493,7 +493,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 		self.indice = indice					# La busqueda arroja el indice del alumno
 		self.CuadroBuscar.clear()
 		self.Mostrar.clear()					# Limpiamos la busqueda pasada
-		self.Listas.lista[indice].DiccAlumno()
 		datos = self.Listas.lista[indice].datos # Obtenemos los datos del alumno
 
 		for i in datos:							# Imprimimos los datos
