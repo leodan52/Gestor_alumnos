@@ -1,6 +1,7 @@
 # Herramientas externas para el sistema
 
-import os, sys, subprocess
+import os, hashlib, sys
+from subprocess import call as sp_call
 from webbrowser import open_new
 import json, fitz, pickle
 from pytesseract import pytesseract
@@ -10,6 +11,7 @@ from pytesseract import pytesseract
 from PIL import Image
 from pdf2image import convert_from_path
 from unidecode import unidecode
+from time import time
 
 def main():
 
@@ -78,15 +80,18 @@ def Agregar2TXT(ruta,lista): # Prestar atención a que siempre agregue en nueva 
 def quitaracentos(cadena):
 
 	cadena = cadena.strip().lower()
+	cadena = cadena.replace('ñ', 'XXXX')
+	cadena = unidecode(cadena)
+	cadena = cadena.replace('XXXX', 'ñ')
 
-	return unidecode(cadena)
+	return cadena
 
 #--------------------------------------------------------------------------------------------
 
 def QuitarMEspacios(cadena):
 	aux = cadena.strip().split()
 
-	return ' '.join(aux2)
+	return ' '.join(aux)
 
 #--------------------------------------------------------------------------------------------
 
@@ -100,14 +105,14 @@ def procesar(cadena):
 
 def abrete(ruta):
 
-	print(ruta)
+	print(f'Abriendo archivo en: {ruta}')
 
 	if sys.platform == "linux":
 		os.system(f'xdg-open "{ruta}" >/dev/null 2>&1 &')
 	elif sys.platform == "win32":
 		os.startfile(f'"{ruta}"')
 	elif sys.platform == "darwin":
-		subprocess.call(('open', ruta))
+		sp_call(('open', ruta))
 	else:
 		open_new(ruta)
 
@@ -164,17 +169,51 @@ def historial_rutas(dic, nuevo, ruta):
 #------------------------------------------------------------------------------------------------------------
 
 def PDF2Cadena(ruta):
-	PDF = ProcesarTextPDf(ruta).split(" ")
+	hashes_file = '.hashes_pdf'
 
-	if len(PDF) == 1 and PDF[0].strip():
-		PDF = Image2texto(ruta).split(" ")
+	try:
+		hashes = CargarBinario(hashes_file)
+	except FileNotFoundError:
+		hashes = dict()
+
+	hash = calculate_hash_file(ruta)
+
+	if ruta in hashes:
+		if hashes[ruta][0] == hash:
+			if hashes[ruta][2] == 1:
+				print(f'PDF imagen se obtiene de \'{hashes_file}\': \'{ruta}\'. ')
+			return hashes[ruta][1]
+		else:
+			print('El archivo {ruta} ha sido modificado')
+
+	PDF = ProcesarTextPDF(ruta).split(" ")
+
+	if len(PDF) == 1 and not PDF[0].strip():
+		PDF = Image2texto(ruta)
+		tipo = 1
+	else:
+		PDF = ' '.join(PDF)
+		tipo = 0
+
+	hashes[ruta] = [hash, PDF, tipo]
+
+	GuardarBinario(hashes, hashes_file)
 
 	return PDF
+
+
+def calculate_hash_file(ruta):
+	hasher = hashlib.sha512()
+	with open(ruta, 'rb') as file_:
+		b = file_.read()
+		hasher.update(b)
+
+	return hasher.hexdigest()
 
 #------------------------------------------------------------------------------------------------------------
 
 def BuscarEnCadena(cadena1, lista):
-	palabras = cadena1.split()
+	Palabras = cadena1.split()
 	m = 0
 	n = len(Palabras)
 
@@ -200,7 +239,7 @@ def BuscarEnCadena(cadena1, lista):
 
 #------------------------------------------------------------------------------------------------------------
 
-def ProcesarTextPDf(ruta):
+def ProcesarTextPDF(ruta):
 
 	salida = ExtraerTextPDF(ruta).lower()
 	salida = salida.split()
@@ -217,7 +256,7 @@ def ExtraerTextPDF(ruta):
 		for page in doc:
 			text_ = page.get_text()
 			#text += text_.replace('�','').strip()
-			text += unidecode(text_).strip()
+			text += quitaracentos(text_).strip() # Experimento
 
 	return text
 
@@ -235,6 +274,43 @@ def ChecarDictamen(lista):
 			i.pop(-1)
 
 	return any(check)
+
+#*-------------------------------------------------------------------------------------------*
+#*------ Decoradores         ----------------------------------------------------------------*
+#*-------------------------------------------------------------------------------------------*
+
+def MensajeClase(funcion):
+	def infuncion(clase, *args, **kwargs):
+		original_stdout = sys.stdout
+		class TabbedStdout:
+			def write(self, text):
+				original_stdout.write('\t' + text)
+
+		print(f'\n<Iniciando: Mensaje de clase \'{clase.__class__.__name__}\': Ejecutando \'{funcion.__name__}\'>')
+
+		sys.stdout = TabbedStdout()
+
+		r = funcion(clase, *args, **kwargs)
+
+		sys.stdout = original_stdout
+
+		print(f'\n<Finalizado \'{funcion.__name__}\'>\n')
+
+		return r
+	return infuncion
+
+def TiempoEjecucion(funcion):
+	def infuncion(*args, **kwargs):
+		inicio = time()
+		r = funcion(*args, **kwargs)
+		fin = time()
+
+		print(f'Hecho en {fin - inicio} segundos')
+
+		return r
+	return infuncion
+
+
 
 if __name__ == "__main__":
 	main()
