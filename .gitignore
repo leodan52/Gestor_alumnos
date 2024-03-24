@@ -1,6 +1,7 @@
 *.json
 *.txt
 *.csv
+*.xlsx
 
 .CACHE/
 **/__pycache__
@@ -11,3 +12,4 @@ BASE/
 
 Binario
 .hashes_pdf
+pruebas.ipynb
