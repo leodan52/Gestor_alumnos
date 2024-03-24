@@ -63,6 +63,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 #		self.actionImportar.triggered.connect(self.Importar_)
 		self.actionGuardar.triggered.connect(self.Guardar_)
 		self.actionGenerar_lista.triggered.connect(self.GenerarListas_)
+		self.actionGenerar_Excel.triggered.connect(self.GenerarListasExcel_)
 		self.actionImportar_JSON.triggered.connect(self.ImportarJSON)
 		self.actionExportar_JSON.triggered.connect(self.ExportarJSON)
 		self.actionImportacion_masiva.triggered.connect(self.ImportarCSV_)
@@ -115,6 +116,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 		rutas_dict = ({"Base_datos": self.Ruta_Base,
 					 	"Base_PDF": self.Ruta_PDF})
 		historial = ({"Salida_listas": self.dir_main,
+						"Salida_listas_excel": self.dir_main,
 						"Entrada_JSON": os.path.join(self.dir_main, "sin_titulo.json"),
 						"Salida_JSON": self.dir_main})
 
@@ -237,6 +239,29 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
 		self.Listas.GenerarListas(archivo)
 		self.MensajeUser(f'Las listas completas han sido generadas en {archivo}')
+
+	#--------Generar Listas Completas.xlsx -----------------------------------------------------
+
+	def GenerarListasExcel_(self):
+
+		''' Usa el método de la clase TodosMisAlumnos para generar un archivo xlsx
+			de los alumnos proporcionados por la base de datos '''
+
+
+		ruta = extraer_historial(self.Ruta_Historial)["Salida_listas_excel"]
+
+		archivo = QFileDialog.getSaveFileName(self, "Generar archivo",
+											"{ruta}/Listas_sin_nombre.xlsx",
+											"Archivo XLSX (*.xlsx)" )[0]
+
+		if archivo.strip() == "":
+			return
+
+		ruta = os.path.dirname(archivo)
+		historial_rutas("Salida_listas_excel",ruta,self.Ruta_Historial)
+
+		self.Listas.GenerarListasExcel(archivo)
+		self.MensajeUser(f'Las listas excel han sido generadas en {archivo}')
 
 	#------- Import JSON----------------------------------------------------------------------------
 

@@ -179,6 +179,8 @@ class Ui_MainWindow(object):
         self.actionGuardar_en.setObjectName("actionGuardar_en")
         self.actionNuevo = QtWidgets.QAction(MainWindow)
         self.actionNuevo.setObjectName("actionNuevo")
+        self.actionGenerar_Excel = QtWidgets.QAction(MainWindow)
+        self.actionGenerar_Excel.setObjectName("actionGenerar_Excel")
         self.menuJSON.addAction(self.actionImportar_JSON)
         self.menuJSON.addAction(self.actionExportar_JSON)
         self.menuasdasd.addAction(self.actionNuevo)
@@ -189,6 +191,7 @@ class Ui_MainWindow(object):
         self.menuasdasd.addAction(self.actionGuardar_en)
         self.menuasdasd.addSeparator()
         self.menuasdasd.addAction(self.actionGenerar_lista)
+        self.menuasdasd.addAction(self.actionGenerar_Excel)
         self.menuasdasd.addAction(self.menuJSON.menuAction())
         self.menuasdasd.addAction(self.actionImportacion_masiva)
         self.menuCursos.addAction(self.actionOrganizar_PDFs)
@@ -249,13 +252,4 @@ class Ui_MainWindow(object):
         self.actionGuardar.setText(_translate("MainWindow", "Guardar"))
         self.actionGuardar_en.setText(_translate("MainWindow", "Guardar en..."))
         self.actionNuevo.setText(_translate("MainWindow", "Nuevo"))
-
-
-if __name__ == "__main__":
-    import sys
-    app = QtWidgets.QApplication(sys.argv)
-    MainWindow = QtWidgets.QMainWindow()
-    ui = Ui_MainWindow()
-    ui.setupUi(MainWindow)
-    MainWindow.show()
-    sys.exit(app.exec_())
+        self.actionGenerar_Excel.setText(_translate("MainWindow", "Generr Excel"))

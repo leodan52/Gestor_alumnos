@@ -329,6 +329,7 @@
     <addaction name="actionGuardar_en"/>
     <addaction name="separator"/>
     <addaction name="actionGenerar_lista"/>
+    <addaction name="actionGenerar_Excel"/>
     <addaction name="menuJSON"/>
     <addaction name="actionImportacion_masiva"/>
    </widget>
@@ -424,6 +425,11 @@
   <action name="actionNuevo">
    <property name="text">
     <string>Nuevo</string>
+   </property>
+  </action>
+  <action name="actionGenerar_Excel">
+   <property name="text">
+    <string>Generr Excel</string>
    </property>
   </action>
  </widget>

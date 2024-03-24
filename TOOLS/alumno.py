@@ -7,6 +7,9 @@ import TOOLS.busqueda as bq
 #from shutil import rmtree
 from datetime import datetime
 import re
+from itertools import product
+from openpyxl import Workbook
+from openpyxl.styles import Font
 
 #*-------------------------------------------------------------------------------------------*
 #*------ Clases -----------------------------------------------------------------------------*
@@ -224,7 +227,9 @@ class TodosMisAlumnos:
 
 #		fecha = datetime.today().strftime('%Y-%m-%d %H:%M')
 
-		cambio = f'\tSe agregó el alumno {lista[0]}:\n\t\tNúmero de registro: {lista[1]}, Carrera: {lista[2]}, Centro universitario: {lista[3]}, Curso: {lista[4]}, Plantel: {lista[5]}, Horario: {lista[6]}'
+		cambio = (f'\tSe agregó el alumno {lista[0]}:\n\t\tNúmero de registro:'
+			+ f' {lista[1]}, Carrera: {lista[2]}, Centro universitario: {lista[3]}, '
+			+ f'Curso: {lista[4]}, Plantel: {lista[5]}, Horario: {lista[6]}')
 
 		self.lista.append(Alumno(*lista))
 		self.Cambios_realizados(cambio)
@@ -355,26 +360,26 @@ class TodosMisAlumnos:
 
 		Salones = dict()
 
-		for plantel in self.Data["Plantel"]:
-			for curso in self.Data["Curso"]:
-				for horario in self.Data["Horario"]:
+		combinaciones = product(self.Data["Plantel"], self.Data["Curso"], self.Data["Horario"])
 
-					cadena_comparar = f'{plantel}-{curso}-{horario}'
+		for plantel, curso, horario in combinaciones:
 
-					salon = filter(lambda alumno: cadena_comparar == f'{alumno.plantel}-{alumno.curso}-{alumno.horario}' , self.lista)
-					salon = list(salon)
+			cadena_comparar = f'{plantel}-{curso}-{horario}'
 
-					if salon == []:
-						continue
-					else:
-						salon.sort()
+			salon = filter(lambda alumno: cadena_comparar == f'{alumno.plantel}-{alumno.curso}-{alumno.horario}' , self.lista)
+			salon = list(salon)
 
-					Salon_actual = f'\n\n** Lista del plantel *{plantel}*, curso *{curso}* del horario *{horario}* **\n\n'
-					Salones[Salon_actual] = []
+			if salon == []:
+				continue
+			else:
+				salon.sort()
 
-					for alumno in salon:
-						datos_alumno = [alumno.nombre,alumno.nRegistro,alumno.carrera,alumno.CU,alumno.NR_entregado, alumno.admitido]
-						Salones[Salon_actual].append(datos_alumno)
+			Salon_actual = f'\n\n** Lista del plantel *{plantel}*, curso *{curso}* del horario *{horario}* **\n\n'
+			Salones[Salon_actual] = []
+
+			for alumno in salon:
+				datos_alumno = [alumno.nombre,alumno.nRegistro,alumno.carrera,alumno.CU,alumno.NR_entregado, alumno.admitido]
+				Salones[Salon_actual].append(datos_alumno)
 
 		titulos = ["Nombre","Num. de registro", "Carrera", "Centro", "PDF enviado", "¿Admitido?"]
 
@@ -394,6 +399,47 @@ class TodosMisAlumnos:
 
 
 			print("\n", file=salida)
+
+	@MensajeClase
+	def GenerarListasExcel(self, archivo = "Listas_completas.xlsx"):
+
+		wb = Workbook()
+		ws = wb.active
+		ft_headers = Font(bold=True)
+		n = 0
+
+		combinaciones = product(self.Data["Plantel"], self.Data["Curso"], self.Data["Horario"])
+		headers = ["Nombre","Num. de registro", "Carrera", "Centro", "PDF enviado", "¿Admitido?"]
+
+		for plantel, curso, horario in combinaciones:
+
+			cadena_comparar = f'{plantel}-{curso}-{horario}'
+
+			salon = filter(lambda alumno: cadena_comparar == f'{alumno.plantel}-{alumno.curso}-{alumno.horario}' , self.lista)
+			salon = list(salon)
+
+			if salon == []:
+				continue
+			else:
+				salon.sort()
+
+			if n == 0:
+				ws.title = f'{plantel}{horario}'.replace(' ', '')
+			else:
+				ws = wb.create_sheet(f'{plantel}{horario}'.replace(' ', ''))
+
+			ws.append([cadena_comparar])
+			ws.append(headers)
+			for cell in ws[2]:
+				cell.font = ft_headers
+
+			for alumno in salon:
+				ws.append([alumno.nombre,alumno.nRegistro,alumno.carrera,alumno.CU,alumno.NR_entregado, alumno.admitido])
+
+			n += 1
+
+		wb.save(archivo)
+		wb.close()
 
 	#--------------------------------------------------------------------------------------------
 
@@ -582,9 +628,10 @@ class TodosMisAlumnos:
 
 	#----------- Exportar algunos alumnos JSON ------------------------------------------------
 
+	@MensajeClase
 	def ExportarAulaJSON(self, ruta_archivo, *indices):
 
-		''' Crea un archivo CSV con los alumnos seleccionados '''
+		''' Crea un archivo JSON con los alumnos seleccionados '''
 
 		salida = {"Alumnos" : []}
 
