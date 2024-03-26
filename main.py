@@ -51,7 +51,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 		self.Necesario_files()
 		self.Set_RutasBases()
 
-		self.Listas = self.Extraer_()
+		self.Listas = TodosMisAlumnos.Extraer_instancia(self.Ruta_Base, self.Ruta_PDF)
 
 		self.MensajeUser(f'Bienvenido. Estamos trabajando en {self.dir_main}')
 
@@ -137,17 +137,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 		self.Ruta_Base = rutas["Base_datos"]
 		self.Ruta_PDF = rutas["Base_PDF"]
 
-	#------- Exportar los alumnos desde la base de datos-------------------------------------------
-
-	def Extraer_(self):
-
-		''' Extraer los datos de los alumnos  de un archivo existente '''
-
-		try:
-			return CargarBinario(self.Ruta_Base)
-		except FileNotFoundError:
-			os.makedirs(os.path.split(self.Ruta_Base)[0], exist_ok = True)
-			return TodosMisAlumnos([], self.Ruta_PDF, os.path.split(self.Ruta_Base)[0])
 
 	#--------Mostrar mensajes al usuario -----------------------------------------------------------
 
@@ -161,7 +150,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
 	def ActualizarCompletador(self):
 
-		nombres = list(map(lambda a: a.nombre, self.Listas.lista))
+		nombres = list(map(lambda a: a.nombre, self.Listas))
 
 		PalabrasClaves = QCompleter(nombres)
 		PalabrasClaves.setCaseSensitivity(QtCore.Qt.CaseInsensitive)
@@ -445,7 +434,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
 		index = self.Mostrar.currentRow()
 		try:
-			datos = self.Listas.lista[self.indice].datos
+			datos = self.Listas[self.indice].datos
 			atri = list(datos.keys())[index]
 		except AttributeError:
 			return
@@ -484,7 +473,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
 		''' Función para preguntar a usuario si está seguro de eliminar alumno '''
 
-		nombre = self.Listas.lista[self.indice].nombre
+		nombre = self.Listas[self.indice].nombre
 
 
 		if not f:
@@ -518,7 +507,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 		self.indice = indice					# La busqueda arroja el indice del alumno
 		self.CuadroBuscar.clear()
 		self.Mostrar.clear()					# Limpiamos la busqueda pasada
-		datos = self.Listas.lista[indice].datos # Obtenemos los datos del alumno
+		datos = self.Listas[indice].datos # Obtenemos los datos del alumno
 
 		for i in datos:							# Imprimimos los datos
 			self.Mostrar.addItem(i + ": " + datos[i]  )
@@ -707,7 +696,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 			self.BotonEliminar.setEnabled(True)
 			self.buttonActualizarInfo.setEnabled(True)
 
-		if self.Listas.lista[self.indice].datos["¿PDF entregado?"] == "Sí":
+		if self.Listas[self.indice].datos["¿PDF entregado?"] == "Sí":
 			self.AbrirPDF.setEnabled(True)
 		else:
 			self.AbrirPDF.setEnabled(False)
@@ -742,8 +731,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 			self.Actualizar_()
 
 	def Actualizar_(self):
-			self.Listas = self.Extraer_()
-			self.MensajeUser(f'La base de datos {self.Ruta_Base}/ ha sido cargada')
+		self.Listas = TodosMisAlumnos.Extraer_instancia(self.Ruta_Base, self.Ruta_PDF)
+		self.MensajeUser(f'La base de datos {self.Ruta_Base}/ ha sido cargada')
 
 
 	#******************************************************************************

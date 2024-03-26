@@ -17,12 +17,13 @@ from openpyxl.styles import Font
 
 
 class TodosMisAlumnos:
+	version = '1.0.0'
 
 	def __init__(self,lista_,ruta_pdf, ruta_base_datos):
 
 		''' Clase que contiene las listas de todos los alumnos '''
-
-		self.lista = lista_
+		self.__version_clase = TodosMisAlumnos.version
+		self.__lista = lista_
 		self.ruta_pdf = ruta_pdf
 		self.ruta_base_datos = ruta_base_datos
 		self.ruta_h = os.path.join(os.path.dirname(self.ruta_base_datos), ".CACHE")
@@ -38,6 +39,45 @@ class TodosMisAlumnos:
 		self.Control_version()
 		self.EntregarPDF()
 		self.UsedData()
+
+	def __getitem__(self, index):
+		return self.__lista[index]
+
+	def __iter__(self):
+		yield from self.__lista
+
+	@property
+	def version_clase(self):
+		return self.__version_clase
+
+
+	#------- Exportar los alumnos desde la base de datos-------------------------------------------
+	@classmethod
+	def Extraer_instancia(cls, ruta_Base, ruta_PDF):
+
+		''' Extraer los datos de los alumnos  de un archivo existente '''
+
+		try:
+			instance_ = CargarBinario(ruta_Base)
+			if hasattr(instance_, 'version'):
+				version_instance = instance_.version_clase
+				version_actual = cls.version
+			else:
+				raise AttributeError('La instancia guardada no tiene version')
+
+			print(version_instance, version_actual)
+
+			if version_instance != version_actual:
+				raise ValueError(f'Version de instancia ({version_instance}) no coicide con version actual ({version_actual}) de la clase')
+
+			return instance_
+
+		except (FileNotFoundError, AttributeError, ValueError) as e:
+			print(f'Se desplegó la siguiente Excepcion:')
+			print(f'\t{type(e).__name__}: {e}')
+			print('Se procede con una instancia vacia nueva')
+			os.makedirs(os.path.split(ruta_Base)[0], exist_ok = True)
+			return cls([], ruta_PDF, os.path.split(ruta_Base)[0])
 
 	#---------------------------------------------------------------------------------------------
 
@@ -125,7 +165,7 @@ class TodosMisAlumnos:
 
 				entregado[PDF.replace(".pdf","")] = rutaPDF
 
-		for alumno in self.lista:
+		for alumno in self.__lista:
 			nombre = alumno.comparar_nombre
 
 			if nombre in entregado:
@@ -147,7 +187,7 @@ class TodosMisAlumnos:
 		self.Data["Carrera"] = []
 		self.Data["Centro Universitario"] = []
 
-		for alumno in self.lista:
+		for alumno in self.__lista:
 			if alumno.plantel not in self.Data["Plantel"]:
 				self.Data["Plantel"].append(alumno.plantel)
 			if alumno.curso not in self.Data["Curso"]:
@@ -231,7 +271,7 @@ class TodosMisAlumnos:
 			+ f' {lista[1]}, Carrera: {lista[2]}, Centro universitario: {lista[3]}, '
 			+ f'Curso: {lista[4]}, Plantel: {lista[5]}, Horario: {lista[6]}')
 
-		self.lista.append(Alumno(*lista))
+		self.__lista.append(Alumno(*lista))
 		self.Cambios_realizados(cambio)
 		self.UsedData()
 
@@ -241,7 +281,7 @@ class TodosMisAlumnos:
 
 		''' Eliminar alumno '''
 
-		d = self.lista[indice].datos
+		d = self.__lista[indice].datos
 
 #		fecha = datetime.today().strftime('%Y-%m-%d %H:%M')
 		cambio= f'\tSe eliminó al alumno {d["Nombre"]}:\n\t\t'
@@ -252,7 +292,7 @@ class TodosMisAlumnos:
 			aux = f'{i}: {d[i]}, '
 			cambio = cambio + aux
 
-		self.lista.pop(indice)
+		self.__lista.pop(indice)
 		self.Cambios_realizados(cambio)
 		self.UsedData()
 
@@ -278,7 +318,7 @@ class TodosMisAlumnos:
 		for PDF in PDFs:
 			pdf_string = PDF2Cadena(PDF)
 
-			alumnos = list(filter(lambda x: TodosMisAlumnos.__buscarString(x.comparar_nombre, pdf_string), self.lista))
+			alumnos = list(filter(lambda x: TodosMisAlumnos.__buscarString(x.comparar_nombre, pdf_string), self.__lista))
 
 			if len(alumnos) > 1:
 				print(f'Warning: Hay {len(alumnos)} alumnos que coinciden con el PDF.')
@@ -333,7 +373,7 @@ class TodosMisAlumnos:
 		Error = dict()
 		indice = 0
 
-		for alumno in self.lista:
+		for alumno in self.__lista:
 			nuevo = alumno.ValidarPDF()
 			if hasattr(alumno, "CoinPorcent"):
 				if alumno.CoinPorcent < 50.0:
@@ -366,7 +406,7 @@ class TodosMisAlumnos:
 
 			cadena_comparar = f'{plantel}-{curso}-{horario}'
 
-			salon = filter(lambda alumno: cadena_comparar == f'{alumno.plantel}-{alumno.curso}-{alumno.horario}' , self.lista)
+			salon = filter(lambda alumno: cadena_comparar == f'{alumno.plantel}-{alumno.curso}-{alumno.horario}' , self.__lista)
 			salon = list(salon)
 
 			if salon == []:
@@ -415,7 +455,7 @@ class TodosMisAlumnos:
 
 			cadena_comparar = f'{plantel}-{curso}-{horario}'
 
-			salon = filter(lambda alumno: cadena_comparar == f'{alumno.plantel}-{alumno.curso}-{alumno.horario}' , self.lista)
+			salon = filter(lambda alumno: cadena_comparar == f'{alumno.plantel}-{alumno.curso}-{alumno.horario}', self.__lista)
 			salon = list(salon)
 
 			if salon == []:
@@ -447,12 +487,14 @@ class TodosMisAlumnos:
 
 		''' Motor para edición de datos de alumnos para GUI'''
 
-		viejo = self.lista[indice].datos[dato]
+		viejo = self.__lista[indice].datos[dato]
 #		fecha = datetime.today().strftime('%Y-%m-%d %H:%M')
 
-		cambio = f'\tCambio en {self.lista[indice].nombre} del plantel {self.lista[indice].plantel}, curso {self.lista[indice].curso}, horario {self.lista[indice].horario}:\n\t\t Cambió {dato}: {viejo} --> {nuevo}'
+		cambio = (f'\tCambio en {self.__lista[indice].nombre} del plantel '
+			+ f'{self.__lista[indice].plantel}, curso {self.__lista[indice].curso}, '
+			+ f'horario {self.__lista[indice].horario}:\n\t\t Cambió {dato}: {viejo} --> {nuevo}')
 
-		self.lista[indice].ActualizarDato(dato,nuevo)
+		self.__lista[indice].ActualizarDato(dato,nuevo)
 		self.Cambios_realizados(cambio)
 		self.UsedData()
 
@@ -460,7 +502,7 @@ class TodosMisAlumnos:
 	#--------------------------------------------------------------------------------------------
 
 	def Buscar_(self,cadena):
-		indice = bq.buscar_GUI(procesar(cadena),self.lista)
+		indice = bq.buscar_GUI(procesar(cadena),self.__lista)
 
 		return indice
 
@@ -471,7 +513,7 @@ class TodosMisAlumnos:
 		indice = 0
 		self.estructuraArbol = dict()
 
-		for i in self.lista:
+		for i in self.__lista:
 			plantel, curso, horario = i.DatosSalon
 
 			if plantel not in self.estructuraArbol:
@@ -497,7 +539,7 @@ class TodosMisAlumnos:
 
 		''' Abrir el documento PDF desde el GUI '''
 
-		ruta = self.lista[indice].RutaPDF
+		ruta = self.__lista[indice].RutaPDF
 
 		if ruta == "Sin ruta":
 			return
@@ -518,7 +560,7 @@ class TodosMisAlumnos:
 		grupos = []
 		total_nr = 0
 
-		for i in self.lista:
+		for i in self.__lista:
 			todos["Alumnos"].append(i.datos_json)
 			total += 1
 
@@ -623,7 +665,7 @@ class TodosMisAlumnos:
 			writer = csv.writer(salida)
 
 			for i in indices:
-				alumno = self.lista[i].DatosUDG
+				alumno = self.__lista[i].DatosUDG
 				writer.writerow(alumno)
 
 	#----------- Exportar algunos alumnos JSON ------------------------------------------------
@@ -636,7 +678,7 @@ class TodosMisAlumnos:
 		salida = {"Alumnos" : []}
 
 		for i in indices:
-			salida["Alumnos"].append(self.lista[i].datos_json)
+			salida["Alumnos"].append(self.__lista[i].datos_json)
 
 		salida = json.dumps(salida, ensure_ascii=False, indent = 4)
 
@@ -656,7 +698,7 @@ class TodosMisAlumnos:
 
 		self.num_Admitidos = 0
 
-		for alumno in self.lista:
+		for alumno in self.__lista:
 			alumno.ConfirmarAdmision(cadena)
 
 			if alumno.admitido == "*Sí*":
@@ -668,6 +710,8 @@ class TodosMisAlumnos:
 #--------------------------------------------------------------------------------------------
 
 class Alumno:
+
+	version = '1.0.0'
 
 	def __init__(self, nombre, numRegistro, carrera, CU, curso, plantel, horario):
 
@@ -681,13 +725,13 @@ class Alumno:
 		# plantel: Plantel de Lumiere donde asiste el alumno
 		# horario: Horario en el que el alumno asiste
 
-		self.nombre = QuitarMEspacios(nombre)
-		self.nRegistro = numRegistro
-		self.carrera = QuitarMEspacios(carrera)
-		self.CU = CU
-		self.curso = curso
-		self.plantel = plantel
-		self.horario = horario
+		self._nombre = QuitarMEspacios(nombre)
+		self._nRegistro = numRegistro
+		self._carrera = QuitarMEspacios(carrera)
+		self._CU = CU
+		self._curso = curso
+		self._plantel = plantel
+		self._horario = horario
 		self.NR_entregado = "No data"
 		self.bandera = ""
 		self.RutaPDF = "Sin ruta"
@@ -695,11 +739,39 @@ class Alumno:
 
 		self.RellenarValoresVacios()
 
+	@property
+	def nombre(self):
+		return self._nombre
+
+	@property
+	def nRegistro(self):
+		return self._nRegistro
+
+	@property
+	def carrera(self):
+		return self._carrera
+
+	@property
+	def CU(self):
+		return self._CU
+
+	@property
+	def curso(self):
+		return self._curso
+
+	@property
+	def plantel(self):
+		return self._plantel
+
+	@property
+	def horario(self):
+		return self._horario
+
 	#--------------------------------------------------------------------------------------------
 
 	def __repr__(self):
-		representacion = f'< Objeto : Alumno, Nombre: \'{self.nombre}\', Carrera: \'{self.carrera}\', ' + \
-			f'CU: \'{self.CU}\', Lumiere: \'{self.plantel}\' - \'{self.horario}\' - \'{self.curso}\'> '
+		representacion = f'< Objeto : Alumno, Nombre: \'{self._nombre}\', Carrera: \'{self._carrera}\', ' + \
+			f'CU: \'{self._CU}\', Lumiere: \'{self._plantel}\' - \'{self._horario}\' - \'{self._curso}\'> '
 
 		return representacion
 
@@ -710,26 +782,20 @@ class Alumno:
 
 	#--------------------------------------------------------------------------------------------
 
-	@property
-	def comparar_nombre(self):
-		return quitaracentos(self.nombre)
-
-	#--------------------------------------------------------------------------------------------
-
 	def RellenarValoresVacios(self):
 
-		aux = [self.nRegistro, self.carrera, self.CU]
+		aux = [self._nRegistro, self._carrera, self._CU]
 
 		while "" in aux:
 			indice = aux.index("")
 			if indice == 0:
-				self.nRegistro = "n/a"
+				self._nRegistro = "n/a"
 			elif indice == 1:
-				self.carrera = "n/a"
+				self._carrera = "n/a"
 			else:
-				self.CU = "n/a"
+				self._CU = "n/a"
 
-			aux = [self.nRegistro, self.carrera, self.CU]
+			aux = [self._nRegistro, self._carrera, self._CU]
 
 
 	#--------------------------------------------------------------------------------------------
@@ -746,20 +812,19 @@ class Alumno:
 			caso contrario, 1 '''
 
 		if dato == "Número de registro":
-			self.nRegistro = nuevo
+			self._nRegistro = nuevo
 		elif dato == "Carrera":
-			self.carrera = nuevo
+			self._carrera = nuevo
 		elif dato == "Centro Universitario":
-			self.CU = nuevo
+			self._CU = nuevo
 		elif dato == "Nombre":
-			self.nombre = nuevo
-
+			self._nombre = nuevo
 		elif dato == "Curso":
-			self.curso = nuevo
+			self._curso = nuevo
 		elif dato == "Plantel":
-			self.plantel = nuevo
+			self._plantel = nuevo
 		elif dato == "Horario":
-			self.horario = nuevo
+			self._horario = nuevo
 		else:
 			return 0
 
@@ -781,8 +846,8 @@ class Alumno:
 		else:
 			self.CoinPorcent = BuscarEnCadena(self.comparar_nombre, cadena)
 
-		if self.nRegistro != "n/a":
-			self.CoinNum = BuscarEnCadena(self.nRegistro, cadena)
+		if self._nRegistro != "n/a":
+			self.CoinNum = BuscarEnCadena(self._nRegistro, cadena)
 		else:
 			self.CoinNum = -1
 			return self.ExtraerNumRegistro(cadena)
@@ -805,23 +870,30 @@ class Alumno:
 	#--------------------------------------------------------------------------------------------
 
 	def ConfirmarAdmision(self, dictamen):
-		if self.nRegistro == "n/a":
+		if self._nRegistro == "n/a":
 			return
 
-		porc_coincidencia = BuscarEnCadena(self.nRegistro, dictamen)
+		porc_coincidencia = BuscarEnCadena(self._nRegistro, dictamen)
 
 		if porc_coincidencia == 100:
 			self.admitido = "*Sí*"
 		else:
 			self.admitido = " No"
+
+	#--------------------------------------------------------------------------------------------
+
+	@property
+	def comparar_nombre(self):
+		return quitaracentos(self._nombre)
+
 	#--------------------------------------------------------------------------------------------
 
 	@property
 	def DatosSalon(self):
 		salida = ([
-			self.plantel,
-			self.curso,
-			self.horario
+			self._plantel,
+			self._curso,
+			self._horario
 			])
 		return salida
 
@@ -830,10 +902,10 @@ class Alumno:
 	@property
 	def DatosUDG(self):
 		salida = ([
-			self.nombre,
-			self.nRegistro,
-			self.carrera,
-			self.CU
+			self._nombre,
+			self._nRegistro,
+			self._carrera,
+			self._CU
 		])
 
 		return salida
@@ -844,9 +916,9 @@ class Alumno:
 
 		''' Genera diccionario que contiene la información del alumno '''
 
-		datos_ = ({ "Nombre" : self.nombre, "Número de registro" : self.nRegistro,
-					"Carrera" : self.carrera, "Centro Universitario" : self.CU,
-					"Curso" : self.curso, "Plantel" : self.plantel, "Horario" : self.horario,
+		datos_ = ({ "Nombre" : self._nombre, "Número de registro" : self._nRegistro,
+					"Carrera" : self._carrera, "Centro Universitario" : self._CU,
+					"Curso" : self._curso, "Plantel" : self._plantel, "Horario" : self._horario,
 					"¿PDF entregado?" : self.NR_entregado, "¿Admitido?" : self.admitido})
 
 		if self.admitido == "No data":
@@ -860,9 +932,9 @@ class Alumno:
 
 		''' Genera diccionario con los datos del alumno como preparación para exportar a JSON '''
 
-		datos = ({	"Nombre" : self.nombre, "Número de registro" : self.nRegistro,
-					"Carrera" : self.carrera, "Centro Universitario" : self.CU,
-					"Curso" : self.curso, "Plantel" : self.plantel, "Horario" : self.horario,
+		datos = ({	"Nombre" : self._nombre, "Número de registro" : self._nRegistro,
+					"Carrera" : self._carrera, "Centro Universitario" : self._CU,
+					"Curso" : self._curso, "Plantel" : self._plantel, "Horario" : self._horario,
 					"¿Admitido?" : self.admitido})
 
 		return datos
