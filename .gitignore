@@ -1,7 +1,8 @@
 *.json
-*.txt
 *.csv
 *.xlsx
+Listas_sin_nombre*
+Por_hacer*
 
 .CACHE/
 **/__pycache__
