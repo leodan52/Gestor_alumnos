@@ -1,5 +1,7 @@
 # Gestor Alumnos
 
+_Primer borrador del README. No hay imágenes aún, y falta revisión ortográfica._
+
 Este proyecto fue desarrollado para gestionar las listas de Alumnos en cursos de preparación para el examen PAA. Este examen es aplicado en varias universidades para seleccionar entre los aspirantes a carreras nivel licenciatura a aquellos que serán us nuevos estudiantes. Entre aquellas casas de estudios que aplican la PAA se encuentran la Universidad de Guadalajara (UDG).
 
 A lo largo de los años, la necesidad de prepararse para este examen siempre ha estado presente para los ciudadanos de la Ciudad de Guadalajara, así como los habitantes del estado de Jalisco y varias partes más de la República Mexicana. Debido a esto, ha surgido un gran número de empresas que se dedican a ofrecer esta clase de cursos.
@@ -41,8 +43,7 @@ Como se puede observar, cada grupo dentro de la empresa de preparación se ident
 
 ### Iniciamos el gestor
 
-Para comenzar el proyecto, es necesario crear una carpeta como la siguiente
-> `preparacion_2030A/`
+Para comenzar el proyecto, es necesario crear una carpeta como la siguiente: `preparacion_2030A/`.
 
 Es opcional que el nombre termine con el año y la letra que identifica el calendario al cual ingresarán los alumnos que serán admitidos. Este será nuestra Área de Trabajo.
 
@@ -169,7 +170,7 @@ Para realizar esto es necesario haber organizado antes los PDFs como se mencion�
 
 > **Nota**: En ocasiones, el alumno no habrá conservado el archivo PDF de su documento. Dado esto, es posible que entregue una foto o imagen que posea del mismo. Para que el programa lo acepte es necesario convertir el archivo a PDF.
 >
-> A la hora de leer el archivo PDF hecho a partir de la imagen, el proyecto usará _tesseract_. Es un motor que usar IA para extraer texto de imagen. El proceso puede ser muy tardado cuando se realiza por primera vez.
+> A la hora de leer el archivo PDF hecho a partir de la imagen, el proyecto usará _tesseract_. Es un motor que usa IA para extraer texto de imagen. El proceso puede ser muy tardado cuando se realiza por primera vez.
 
 ## Archivado
 
@@ -215,7 +216,7 @@ En el menú `Archivo>JSON>...` encontramos las opciones de exportar e importar. 
 ```
 Este archivo esta pensado para compartir los datos de los alumnos entre profesores que usen también este programa, así como facilitar su uso en futuros proyectos que se realicen en el área de desarrollo de la empresa.
 
-Para la importación solo es necesario que exista la clave `Alumnos` para que sea posible la lectura del JSON.
+Para la importación solo es necesario que exista la clave `Alumnos`, como se muestra en el ejemplo, para que sea posible la lectura del JSON.
 
 ### Crear Excel
 
@@ -225,7 +226,7 @@ Esta implementación fue creada para agilizar la comunicación entre los compañ
 
 ## Lectura de Dictamen
 
-El Dictamen de Admitidos a la UDG se publica en La Gaceta, que es el diario oficial de la universidad. El dictamen se suele publicar en formato PDF, como un gran listado que contiene los Números de Registro de cada estudiante admitido, acompañado por el resultado de la evaluación realizada. Esa es la razón principal de solicitar esa información a cada alumno.
+El Dictamen de Admitidos a la UDG se publica en La Gaceta, que es el diario oficial de la universidad. El dictamen se suele publicar en formato PDF, como un gran listado que contiene los Números de Registro de cada estudiante admitido, acompañado por el resultado de la evaluación realizada. Esa es la razón principal para solicitar esa información a cada alumno.
 
 Al descargar ese archivo es posible revisar de forma automática si nuestros alumnos han sido admitidos o no. Esto al ir al menú `Cursos>Confirmar Admisión` y seleccionar el archivo PDF que contiene el Dictamen. La información de admisión de cada alumno será agregada a los archivos que se exporten, ya sea las listas TXT, el archivo JSON y XLSX.
 
@@ -233,29 +234,29 @@ Esto marcaría la finalización de la gestión del curso.
 
 ## Palabras finales: Un poco sobre mí y el proyecto.
 
-Aprovecharé esta sección para compartir mis impresiones personales sobre este proyecto. Hablaré mucho sobre mí, por lo que no es imprescindible leerla para entender el proyecto en sí, aunque sí le dará bastante contexto.
+Aprovecharé esta sección para compartir mis impresiones personales sobre este proyecto. Hablaré mucho sobre mí, por lo que no es imprescindible leer esta parte para entender el proyecto en sí mismo, aunque sí le dará bastante contexto.
 
 Soy Físico de formación, egresado de la Universidad de Guadalajara. Después de terminar el plan de estudios por ahí del 2016-2017, decidí tomar con calma lo que pasaría después; de seguro que mi asesor de tesis de entonces me habrá odiado por eso.
 
-Fue entonces que a mediados de 2018 comencé a trabajar en esa Empresa de Preparación que menciono. No diré el nombre de la empresa aquí, pero de seguro lo sabrán si entran en mi LinkedIn. Mi objetivo era obtener experiencia en la docencia, ya que mi plan era seguir con el posgrado y dedicarme a la investigación, y dar clases es una de las actividades de un académico.
+Fue entonces que a mediados de 2018 comencé a trabajar en esa Empresa de Preparación que he hecho referencia. No diré el nombre de la empresa aquí, pero de seguro lo sabrán si visitan en mi LinkedIn. Mi objetivo era obtener experiencia en la docencia, ya que mi plan era seguir con el posgrado y dedicarme a la investigación, y dar clases es una de las actividades de un académico.
 
-Sin embargo, me lo tomé con demasiada calma; llegó el 2020, y todo mundo sabe que pasó. Estaba bastante preparado para dejar mi trabajo como docente y continuar con los planes, pero todo quedó en pausa. Entre clases online y clases presenciales con cubrebocas, el trabajo estaba hasta cierto punto asegurado.
+Sin embargo, me lo tomé con demasiada calma; llegó el 2020, y todo mundo sabe que pasó. Estaba bastante preparado para dejar mi trabajo como docente y continuar con mis planes, pero todo quedó en pausa. Entre clases online y clases presenciales con cubrebocas, el trabajo estaba hasta cierto punto asegurado.
 
-No obstante, si hubo una disminución de las horas-clase, lo que me dejó bastante tiempo libre. Pero gracias a ese respiro, logré redescubrir una de mis grandes pasiones: la programación.
+No obstante, hubo una disminución de las horas-clase asignadas, lo que me dejó bastante tiempo libre. Pero gracias a ese respiro, y a la cuarentena, logré redescubrir una de mis grandes pasiones: la programación.
 
-Pues aquí estoy, 4 años después de ese fatídico 2020. En ese entonces decidí volver a programar, esta vez en Python, que tantas veces en años anteriores me recomendaron; sinceramente me arrepentí de no haberles hecho caso.
+Pues aquí estoy, 4 años después de ese fatídico 2020. En ese entonces decidí volver a programar, esta vez en Python, que tantas veces en años anteriores me recomendaron; sinceramente me arrepentí de no haberles hecho caso en ese entonces.
 
-En fin, Gestor_Alumnos fue de los primeros proyectos que realicé para un uso práctico en mi día a día. ¿Saben que tedioso es buscar a los alumnos en listas físicas? Y muchas veces los alumnos no estaban ordenados de ninguna forma.
+En fin, Gestor_Alumnos fue de los primeros proyectos que realicé para un uso práctico en mi día a día. ¿Saben lo tedioso que es buscar a los alumnos en listas físicas? Y muchas veces los alumnos no estaban ordenados de ninguna forma.
 
-El proyecto actual no se parece a nada al que hice en ese entonces ---hace 3 años. Comenzó como un programa simple de terminal/interprete, con una base de datos diseñada a base de archivos TXT. Pero poco a poco fue tomando forma, agregando y modificando elementos según iba aprendiendo más sobre Python.
+El proyecto actual no se parece a nada al que hice en ese entonces ---hace 3 años, aproximadamente. Comenzó como un programa simple de terminal/interprete, con una base de datos diseñada con muchos archivos TXT. Pero poco a poco fue tomando forma, agregando y modificando elementos según iba aprendiendo más sobre Python.
 
 Gestor_Alumnos es mi bebé. Aquel primogénito que dejas caer varias veces por falta de experiencia. Si ven el código, podrán notar a lo que me refiero. Me disculpo por adelantando si están pensando en echarle un vistazo.
 
 Hoy en día, después de varios cursos y un BootCamp en Data Science, puedo decir que estoy más preparado para el manejo de datos. Herramientas como Pandas y Numpy me han mostrado que mi Gestor_Alumnos es nada comparado con todo lo que puedo hacer en el futuro.
 
-Mi ambición actual ya no es seguir el camino de un investigador en Física. Siento que a mi 32 años ese camino se ha cerrado por completo. Sin embargo, he encontrado el área perfecta para mí, aquella área que combina dos tópicos que siempre me apasionaron: las matemáticas y la programación.
+Mi ambición actual ya no es seguir el camino de un investigador en Física. Siento que a mis 32 años --al 2024-- ese camino se ha cerrado por completo. Sin embargo, he encontrado el área perfecta para mí, aquella que combina dos tópicos que siempre me apasionaron: las matemáticas y la programación.
 
-Creo que todavía tengo camino por delante para ser un buen Data Scientist. Y definitivamente creo que compartir al mundo este proyecto, aquel que me hizo descubrir que los datos son lo mío, es uno paso importante. Gracias por leer.
+Creo que todavía tengo mucho camino por delante para llamado un Data Scientist. Y definitivamente creo que compartir al mundo este proyecto, aquel que me hizo descubrir que los datos son lo mío, es uno paso importante. Gracias por leer.
 
 ## Contacto
 
@@ -270,10 +271,10 @@ A continuación se listan los menús que el proyecto cuenta, así como una breve
 
 + Archivo:
 	+ Nuevo: Abre una nueva ventana para adminstrar otra Área de Trabajo.
-	+ Abrir carpeta...: Si función aún.
-	+ Recientes: Si función aún
+	+ Abrir carpeta...: _Sin función aún_.
+	+ Recientes: _Sin función aún_.
 	+ Guardar: Actualiza la base de datos guardada en el archivo binario contenido en `BASE/`
-	+ Guardar en...: Sin función aún.
+	+ Guardar en...: _Sin función aún_.
 	+ Generar lista: Exporta listas en un archivo TXT. Ver [esta sección](#generar-lista).
 	+ Generar Excel: Exporta listas en un archivo XLSX. Ver [esta sección](#crear-excel).
 	+ JSON: Ofrece dos menús para exportar o importa un archivo JSON. Ver [esta sección](#exportar-e-importar-en-json).
